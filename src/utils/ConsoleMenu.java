@@ -97,6 +97,35 @@ public class ConsoleMenu {
         scanner.nextLine();
     }
 
+
+    // Returning to the main menu with validation
+    public static void returnToMain() {
+        int inp = -1;
+
+        while (true) {
+            System.out.print("Enter 100 to return to main menu: ");
+
+            // Validate input
+            if (scanner.hasNextInt()) {
+                inp = scanner.nextInt();
+                scanner.nextLine(); // consume newline
+
+                if (inp == 100) {
+                    mainMenu();
+                    break; // exit loop after returning to main menu
+                } else {
+                    System.out.println("Invalid input! Please enter 100.");
+                }
+            } else {
+                System.out.println("Invalid input! Please enter a number.");
+                scanner.nextLine(); // clear invalid input
+            }
+        }
+    }
+
+
+
+
     public  static void projectCatalog(){
         printingTitle("PROJECT CATALOG ");
         System.out.printf("%s 1. %s%n 2. %s%n 3. %s%n 4. %s%n%n","", "View All Projects", "Software Projects Only", "Hardware Projects Only", "Search by Budget Range");
@@ -113,9 +142,24 @@ public class ConsoleMenu {
                 projectService.filterProjectByType("Software");
                 break;
             case 3:
-                projectService.filterProjectByType("Software");
+                projectService.filterProjectByType("Hardware");
                 break;
 
+            case 4:
+                printingTitle("Filter by minimum and maximum budget ");
+                System.out.print("Enter the minimum budget __");
+                double min = scanner.nextDouble();
+                scanner.nextLine();
+                System.out.print("Enter the Maximum budget __");
+                double max = scanner.nextDouble();
+                scanner.nextLine();
+
+                projectService.searchByBudgetRange(min,max);
+                break;
+
+
+            default:
+                mainMenu();
         }
     }
 
@@ -132,6 +176,11 @@ public class ConsoleMenu {
             System.out.printf("%-5d %-20s %-30s %-10s %-10d%n", p.id, p.name, p.description, p.type, p.teamSize);
         }
         System.out.println("-------------------------------------------------------------------------------------------");
+
+        System.out.printf("%n%n");
+
+        returnToMain();
+
     }
 
     // Overloaded: Display only projects of a given type
