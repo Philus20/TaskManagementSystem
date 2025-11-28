@@ -11,10 +11,12 @@ public abstract class Project {
     public int teamSize;
     public double budget;
 
+    private  static  int idCounter=0;
 
 
-    public Project(String id, String name, String description, String type, int teamSize,double budget) {
-        this.id = id;
+
+    public Project( String name, String description, String type, int teamSize,double budget) {
+        this.id = "P"+String.format("%04d", idCounter++);;
         this.name = name;
         this.description = description;
         this.type = type;
@@ -37,6 +39,7 @@ public abstract class Project {
     }
 
     public abstract void displayAttributes();
+    
 
 
 }

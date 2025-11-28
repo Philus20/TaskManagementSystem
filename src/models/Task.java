@@ -5,12 +5,13 @@ public class Task {
     private String taskId;
     private String taskStatus;
     private String projectId;
+    private static int idCounter = 1;
 
 
-    public Task(String aTaskname, String aTaskId, String aTaskStatus, String aProjectId)
+    public Task(String aTaskname, String aTaskStatus, String aProjectId)
     {
         this.taskName = aTaskname;
-        this.taskId = aTaskId;
+        this.taskId =  "T" + String.format("%04d", idCounter++);;
         this.taskStatus = aTaskStatus;
         this.projectId = aProjectId;
     }

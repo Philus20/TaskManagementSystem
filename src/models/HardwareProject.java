@@ -4,8 +4,8 @@ package models;
 public class HardwareProject extends Project {
     private String hardwareType;
 
-    public HardwareProject(String id, String name, String description, String type, int teamSize, String hardwareType,double budject) {
-        super(id, name, description, type, teamSize,budject);
+    public HardwareProject( String name, String description, String type, int teamSize, String hardwareType,double budject) {
+        super( name, description, type, teamSize,budject);
         this.hardwareType = hardwareType;
     }
 
