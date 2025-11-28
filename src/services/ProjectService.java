@@ -16,10 +16,19 @@ public class ProjectService {
         projectsRepository = new ArrayList<>();
     }
 
+
+    //Adding new project. It first check if the project id does not exist
     public void addProject(Project project) {
-        projectsRepository.add(project);
+        boolean exists = projectsRepository.stream()
+                .anyMatch(p -> p.getId().equals(project.getId()));
+
+        if (!exists) {
+            projectsRepository.add(project);
+        }
     }
 
+
+//An endpoint to retrive all the projects
     public List<Project> getAllProjects() {
         return projectsRepository;
     }
@@ -58,5 +67,15 @@ public class ProjectService {
         ConsoleMenu.displayProjects(repoData);
         return "Success";
     }
+
+    //get product by id
+
+    public Project getProjectById(String id)
+    {
+        return projectsRepository.stream().filter(t -> t.getId().equals(id)).findFirst().orElse(null);
+
+    }
+    
+    
 
 }

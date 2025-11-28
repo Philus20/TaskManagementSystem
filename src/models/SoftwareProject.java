@@ -4,7 +4,7 @@ package models;
 public class SoftwareProject extends Project {
     private String programmingLanguage;
 
-    public SoftwareProject(int id, String name, String description, String type, int teamSize, String programmingLanguage, double budject) {
+    public SoftwareProject(String id, String name, String description, String type, int teamSize, String programmingLanguage, double budject) {
         super(id, name, description, type, teamSize,budject);
         this.programmingLanguage = programmingLanguage;
     }
