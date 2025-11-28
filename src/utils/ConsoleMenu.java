@@ -1,6 +1,5 @@
 
-
-package utils;
+        package utils;
 
 import models.Project;
 import models.ProjectStatusReportDto;
@@ -12,6 +11,7 @@ import services.ReportService;
 import services.TaskService;
 import services.UserService;
 import models.User;
+import utils.ValidationUtils;
 
 import java.util.Scanner;
 
@@ -42,51 +42,143 @@ public class ConsoleMenu {
         userService = service;
     }
 
+    // Helper validation input methods
+    private static int readIntInRange(String prompt, int min, int max) {
+        int val;
+        while (true) {
+            System.out.print(prompt);
+            if (!scanner.hasNextInt()) {
+                System.out.println("Invalid input. Please enter a number.");
+                scanner.nextLine();
+                continue;
+            }
+            val = scanner.nextInt();
+            scanner.nextLine();
+            if (val < min || val > max) {
+                System.out.printf("Please enter a number between %d and %d.%n", min, max);
+                continue;
+            }
+            return val;
+        }
+    }
+
+    private static int readPositiveInt(String prompt) {
+        int val;
+        while (true) {
+            System.out.print(prompt);
+            if (!scanner.hasNextInt()) {
+                System.out.println("Invalid input. Please enter a positive integer.");
+                scanner.nextLine();
+                continue;
+            }
+            val = scanner.nextInt();
+            scanner.nextLine();
+            if (!ValidationUtils.validateTeamSize(val)) {
+                System.out.println("Team size must be a positive integer. Please try again.");
+                continue;
+            }
+            return val;
+        }
+    }
+
+    private static double readNonNegativeDouble(String prompt) {
+        double val;
+        while (true) {
+            System.out.print(prompt);
+            if (!scanner.hasNextDouble()) {
+                System.out.println("Invalid input. Please enter a number (0 or greater).");
+                scanner.nextLine();
+                continue;
+            }
+            val = scanner.nextDouble();
+            scanner.nextLine();
+            if (!ValidationUtils.validateBudget(val)) {
+                System.out.println("Budget must be non-negative. Please try again.");
+                continue;
+            }
+            return val;
+        }
+    }
+
+    private static String readNonEmptyText(String prompt) {
+        String input;
+        while (true) {
+            System.out.print(prompt);
+            input = scanner.nextLine();
+            if (!ValidationUtils.hasText(input)) {
+                System.out.println("Input cannot be empty. Please try again.");
+                continue;
+            }
+            return input.trim();
+        }
+    }
+
+    private static String readExistingProjectId(String prompt) {
+        String input;
+        while (true) {
+            System.out.print(prompt);
+            input = scanner.nextLine().trim();
+            if ("0".equals(input)) {
+                return "0";
+            }
+            if (!ValidationUtils.hasText(input)) {
+                System.out.println("Project ID cannot be empty. Please try again.");
+                continue;
+            }
+            if (projectService == null || projectService.getProjectById(input) == null) {
+                System.out.printf("No project found with ID %s. Enter a valid project ID or 0 to return.%n", input);
+                continue;
+            }
+            return input;
+        }
+    }
+
+    private static String readValidTaskStatus(String prompt) {
+        String status;
+        while (true) {
+            System.out.print(prompt);
+            status = scanner.nextLine().trim();
+            if (!ValidationUtils.hasText(status)) {
+                System.out.println("Status cannot be empty. Try: Pending, In Progress, Completed.");
+                continue;
+            }
+            if (!ValidationUtils.validateTaskStatus(status)) {
+                System.out.println("Invalid status. Supported: Pending, In Progress, Completed. Try again.");
+                continue;
+            }
+            return status;
+        }
+    }
+
     // Interactive method to create a new project
 
     public static String createProjectInteractive() {
-        String type;
-        do {
+        while (true) {
             System.out.printf("Enter Project Type %n 1. Software %n 2. Hardware %n 3. Exit: ");
-            type = scanner.nextLine().trim();
+            int typeChoice = readIntInRange("", 1, 3);
 
-            if (type.equals("3")) {
+            if (typeChoice == 3) {
                 System.out.println("Exiting project creation...");
                 return "Exited";
             }
 
-            if (ValidationUtils.isValidPositiveNumber(type) && (type.equals("1") || type.equals("2"))) {
-                System.out.print("Enter Project Name: ");
-                String name = scanner.nextLine();
+            String name = readNonEmptyText("Enter Project Name: ");
+            String description = readNonEmptyText("Enter Description: ");
+            int teamSize = readPositiveInt("Enter Team Size: ");
+            double projectBudget = readNonNegativeDouble("Enter Project Budget: ");
 
-                System.out.print("Enter Description: ");
-                String description = scanner.nextLine();
-
-                System.out.print("Enter Team Size: ");
-                int teamSize = scanner.nextInt();
-                scanner.nextLine();
-
-                System.out.print("Enter Project Budget: ");
-                double projectBudget = scanner.nextDouble();
-                scanner.nextLine();
-
-                if (type.equals("1")) {
-                    System.out.print("Enter Programming Language: ");
-                    String language = scanner.nextLine();
-                    SoftwareProject project = new SoftwareProject(name, description, "Software", teamSize, language, projectBudget);
-                    projectService.addProject(project);
-                    return "Software project was created successfully";
-                } else {
-                    System.out.print("Enter Hardware Type: ");
-                    String hardwareType = scanner.nextLine();
-                    HardwareProject project = new HardwareProject(name, description, "Hardware", teamSize, hardwareType, projectBudget);
-                    projectService.addProject(project);
-                    return "Hardware project was created successfully";
-                }
+            if (typeChoice == 1) {
+                String language = readNonEmptyText("Enter Programming Language: ");
+                SoftwareProject project = new SoftwareProject(name, description, "Software", teamSize, language, projectBudget);
+                projectService.addProject(project);
+                return "Software project was created successfully";
             } else {
-                System.out.println("Invalid input! Please enter 1 for Software, 2 for Hardware, or 3 to Exit.");
+                String hardwareType = readNonEmptyText("Enter Hardware Type: ");
+                HardwareProject project = new HardwareProject(name, description, "Hardware", teamSize, hardwareType, projectBudget);
+                projectService.addProject(project);
+                return "Hardware project was created successfully";
             }
-        } while (true);
+        }
     }
 
     // printing title
@@ -120,9 +212,7 @@ public class ConsoleMenu {
 
         System.out.printf("%s 1. %s%n 2. %s%n 3. %s%n 4. %s%n 5. %s%n 6. %s%n%n", "", "Manage Projects", "Manage Tasks ",
                 "View Status Reports", "Switch User","Testing", "Exit");
-        System.out.print("Enter your choice __");
-        int choice = scanner.nextInt();
-        scanner.nextLine();
+        int choice = readIntInRange("Enter your choice __", 1, 6);
 
         switch (choice) {
             case 1:
@@ -138,7 +228,7 @@ public class ConsoleMenu {
                 switchUserMenu();
                 break;
             case 5:
-TestingUserMenu();
+                TestingUserMenu();
                 break;
             case 6:
                 System.out.println("Exiting...");
@@ -152,19 +242,14 @@ TestingUserMenu();
 
     // Returning to the main menu with validation
     public static void returnToMain() {
-        int inp = -1;
-
         while (true) {
             System.out.print("Enter 100 to return to main menu: ");
-
-            // Validate input
             if (scanner.hasNextInt()) {
-                inp = scanner.nextInt();
+                int inp = scanner.nextInt();
                 scanner.nextLine(); // consume newline
-
                 if (inp == 100) {
                     mainMenu();
-                    break; // exit loop after returning to main menu
+                    break;
                 } else {
                     System.out.println("Invalid input! Please enter 100.");
                 }
@@ -179,9 +264,7 @@ TestingUserMenu();
         printingTitle("PROJECT CATALOG ");
         System.out.printf("%s 1. %s%n 2. %s%n 3. %s%n 4. %s%n%n", "", "View All Projects", "Software Projects Only",
                 "Hardware Projects Only", "Search by Budget Range");
-        System.out.print("Enter filter choice __");
-        int input = scanner.nextInt();
-        scanner.nextLine();
+        int input = readIntInRange("Enter filter choice __", 1, 4);
 
         switch (input) {
             case 1:
@@ -196,14 +279,14 @@ TestingUserMenu();
 
             case 4:
                 printingTitle("Filter by minimum and maximum budget ");
-                System.out.print("Enter the minimum budget __");
-                double min = scanner.nextDouble();
-                scanner.nextLine();
-                System.out.print("Enter the Maximum budget __");
-                double max = scanner.nextDouble();
-                scanner.nextLine();
+                double min = readNonNegativeDouble("Enter the minimum budget __");
+                double max = readNonNegativeDouble("Enter the Maximum budget __");
 
-                projectService.searchByBudgetRange(min, max);
+                if (!ValidationUtils.validateBudgetRange(min, max)) {
+                    System.out.println("Invalid budget range. Minimum should be <= Maximum and both non-negative.");
+                } else {
+                    projectService.searchByBudgetRange(min, max);
+                }
                 break;
 
             default:
@@ -293,9 +376,7 @@ TestingUserMenu();
         System.out.printf("%s 1. %s%n 2. %s%n 3. %s%n 4. %s%n%n", "", "Add New Task", "Update Task Status",
                 "Remove Task", "Back to Main Menu");
 
-        System.out.print("Enter Your choice __");
-        int input = scanner.nextInt();
-        scanner.nextLine();
+        int input = readIntInRange("Enter Your choice __", 1, 4);
 
         switch (input) {
             case 1:
@@ -346,70 +427,76 @@ TestingUserMenu();
 
     public static void addingNewTaskMenu() {
         printingTitle("ADD NEW TASK");
-        System.out.print("Enter task name: ");
-        String taskName = scanner.nextLine();
 
-        System.out.print("Enter Assigned Project ID: ");
-        String projectId = scanner.nextLine();
+        String taskName = readNonEmptyText("Enter task name: ");
+        String projectId = readExistingProjectId("Enter Assigned Project ID (or 0 to cancel): ");
+        if ("0".equals(projectId)) {
+            System.out.println("Cancelled adding task.");
+            returnToMain();
+            return;
+        }
+        String status = readValidTaskStatus("Enter Task Status (Pending, In Progress, Completed): ");
 
-        System.out.print("Enter Project Initial Status: ");
-        String status = scanner.nextLine();
+        taskService.addTask(new Task(taskName, status, projectId));
 
-        // auto generate project id
-
-        String taskId = "";
-
-        taskService.addTask(new Task(taskName,  status, projectId));
-
-        System.out.printf("Task \" %s \"  added successfully to project %s %n", taskName, projectId);
-
+        System.out.printf("Task \"%s\" added successfully to project %s%n", taskName, projectId);
+        returnToMain();
     }
 
     public static void updatingTask() {
         printingTitle("Updating TASK");
-        System.out.print("Enter task Id: ");
-        String taskId = scanner.nextLine();
-
-        System.out.print("Enter new Task status : ");
-        String status = scanner.nextLine();
+        String taskId = readNonEmptyText("Enter task Id: ");
+        String status = readValidTaskStatus("Enter new Task status (Pending, In Progress, Completed): ");
 
         Task task = taskService.updateTaskStatus(taskId, status);
-
-        System.out.printf("Task \" %s \"  Marked as  %s %n", task.getTaskName(), status);
-
+        if (task == null) {
+            System.out.printf("No task found with ID %s. Nothing was updated.%n", taskId);
+        } else {
+            System.out.printf("Task \"%s\" marked as %s%n", task.getTaskName(), status);
+        }
+        returnToMain();
     }
 
     public static void removingTask() {
         printingTitle("Deleting TASK");
-        System.out.print("Enter task Id: ");
-        String taskId = scanner.nextLine();
+        String taskId = readNonEmptyText("Enter task Id: ");
 
         taskService.deleteTask(taskId);
 
         System.out.printf("Task with the Id %s has been successfully Removed %n", taskId);
-
+        returnToMain();
     }
 
 
     // User management methods
     public static void createUserMenu() {
         printingTitle("CREATE USER PROFILE");
-        System.out.print("Enter User Name: ");
-        String name = scanner.nextLine();
+        String name = readNonEmptyText("Enter User Name: ");
 
-        System.out.print("Enter User Email: ");
-        String email = scanner.nextLine();
+        String email;
+        while (true) {
+            email = readNonEmptyText("Enter User Email: ");
+            if (!ValidationUtils.validateEmail(email)) {
+                System.out.println("Invalid email format. Please enter a valid email address.");
+                continue;
+            }
+            break;
+        }
 
-        System.out.print("Enter User Role (Regular/Admin): ");
-        String role = scanner.nextLine();
+        String role;
+        while (true) {
+            role = readNonEmptyText("Enter User Role (Regular/Admin): ");
+            if (!ValidationUtils.validateUserRole(role)) {
+                System.out.println("Invalid role. Supported roles: Regular, Admin. Try again.");
+                continue;
+            }
+            break;
+        }
 
         User user;
         if (role.equalsIgnoreCase("Admin")) {
             user = userService.createAdminUser(name, email);
-        } else if (role.equalsIgnoreCase("Regular")) {
-            user = userService.createRegularUser(name, email);
         } else {
-            System.out.println("Invalid role! Creating Regular User by default.");
             user = userService.createRegularUser(name, email);
         }
 
@@ -427,10 +514,8 @@ TestingUserMenu();
         System.out.println("4. Display Current User");
         System.out.println("5. Logout");
         System.out.println("6. Back to Main Menu");
-        System.out.print("Enter your choice __");
 
-        int choice = scanner.nextInt();
-        scanner.nextLine();
+        int choice = readIntInRange("Enter your choice __", 1, 6);
 
         switch (choice) {
             case 1:
@@ -463,8 +548,7 @@ TestingUserMenu();
 
     public static void loginUserMenu() {
         printingTitle("LOGIN");
-        System.out.print("Enter User ID: ");
-        String userId = scanner.nextLine();
+        String userId = readNonEmptyText("Enter User ID: ");
 
         User user = userService.login(userId);
         if (user != null) {
@@ -509,8 +593,7 @@ TestingUserMenu();
 
     //Enter project id to display project details
     public static void enterProjectId() {
-        System.out.print("Enter project id to view details (or 0 to return to main menu): ");
-        String projectId = scanner.nextLine();
+        String projectId = readExistingProjectId("Enter project id to view details (or 0 to return to main menu): ");
         if (projectId.equals("0")) {
             mainMenu();
         } else {
@@ -525,9 +608,7 @@ TestingUserMenu();
 
         System.out.printf("%s 1. %s%n 2. %s%n 3. %s%n 4. %s%n 5. %s%n%n", "", "Add New Task", "Update Task Status",
                 "Remove Task", "View Project Status Report", "Back to Main Menu");
-        System.out.print("Enter your choice __");
-        int choice = scanner.nextInt();
-        scanner.nextLine();
+        int choice = readIntInRange("Enter your choice __", 1, 5);
 
         switch (choice) {
             case 1:
@@ -585,10 +666,8 @@ TestingUserMenu();
             System.out.println("4. View Task");
             System.out.println("5. Update Task Status");
             System.out.println("6. Exit Testing Mode");
-            System.out.print("Enter your choice: ");
 
-            choice = scanner.nextInt();
-            scanner.nextLine(); // consume newline
+            choice = readIntInRange("Enter your choice: ", 1, 6);
 
             switch (choice) {
                 case 1:
@@ -598,7 +677,7 @@ TestingUserMenu();
                     projectService.displayAllProjects();
                     break;
                 case 3:
-                     addingNewTaskMenu();
+                    addingNewTaskMenu();
                     break;
                 case 4:
                     displayCurrentUser();
