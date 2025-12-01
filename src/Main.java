@@ -36,13 +36,8 @@ Task t2 = new Task("Task 2", "Pending", "P002");
         taskService.addTask(t1);
         taskService.addTask(t2);
 
-        // // Display all projects
-        // ConsoleMenu.displayProjects(service.getAllProjects());
-        //
-        // // Display only Software projects
-        // ConsoleMenu.displayProjects(service.getAllProjects(), "Software");
-
-ConsoleMenu.mainMenu();
+        // Start with initial login menu
+        ConsoleMenu.initialLoginMenu();
        
 
         // Display detailed info for one project

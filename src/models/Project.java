@@ -1,6 +1,7 @@
 
 package models;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public abstract class Project {
@@ -10,6 +11,7 @@ public abstract class Project {
     public String type;
     public int teamSize;
     public double budget;
+    public List<String> assignedUserIds;
 
     private  static  int idCounter=0;
 
@@ -22,6 +24,7 @@ public abstract class Project {
         this.type = type;
         this.teamSize = teamSize;
         this.budget = budget;
+        this.assignedUserIds = new ArrayList<>();
     }
     public String getId (){
 
@@ -39,7 +42,19 @@ public abstract class Project {
     }
 
     public abstract void displayAttributes();
-    
 
+    public void assignUser(String userId) {
+        if (!assignedUserIds.contains(userId)) {
+            assignedUserIds.add(userId);
+        }
+    }
+
+    public void removeUser(String userId) {
+        assignedUserIds.remove(userId);
+    }
+
+    public List<String> getAssignedUserIds() {
+        return new ArrayList<>(assignedUserIds);
+    }
 
 }

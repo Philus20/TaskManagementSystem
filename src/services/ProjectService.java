@@ -129,4 +129,24 @@ public class ProjectService {
         int completedTasks = report.stream().mapToInt(r -> r.Completed).sum();
         return (completedTasks * 100.0) / totalTasks;
     }
+
+    // Assign a user to a project
+    public boolean assignUserToProject(String projectId, String userId) {
+        Project project = getProjectById(projectId);
+        if (project != null) {
+            project.assignUser(userId);
+            return true;
+        }
+        return false;
+    }
+
+    // Remove a user from a project
+    public boolean removeUserFromProject(String projectId, String userId) {
+        Project project = getProjectById(projectId);
+        if (project != null) {
+            project.removeUser(userId);
+            return true;
+        }
+        return false;
+    }
 }

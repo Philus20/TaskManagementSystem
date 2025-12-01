@@ -5,6 +5,7 @@ public class Task {
     private String taskId;
     private String taskStatus;
     private String projectId;
+    private String assignedUserId;
     private static int idCounter = 1;
 
 
@@ -14,6 +15,16 @@ public class Task {
         this.taskId =  "T" + String.format("%04d", idCounter++);;
         this.taskStatus = aTaskStatus;
         this.projectId = aProjectId;
+        this.assignedUserId = null;
+    }
+
+    public Task(String aTaskname, String aTaskStatus, String aProjectId, String assignedUserId)
+    {
+        this.taskName = aTaskname;
+        this.taskId =  "T" + String.format("%04d", idCounter++);;
+        this.taskStatus = aTaskStatus;
+        this.projectId = aProjectId;
+        this.assignedUserId = assignedUserId;
     }
     public void setTaskStatus (String status){
         taskStatus=status;
@@ -31,5 +42,12 @@ public class Task {
         return projectId;
     }
 
+    public String getAssignedUserId() {
+        return assignedUserId;
+    }
+
+    public void setAssignedUserId(String assignedUserId) {
+        this.assignedUserId = assignedUserId;
+    }
 
 }

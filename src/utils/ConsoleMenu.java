@@ -1,5 +1,5 @@
 
-        package utils;
+package utils;
 
 import models.Project;
 import models.ProjectStatusReportDto;
@@ -150,9 +150,62 @@ public class ConsoleMenu {
         }
     }
 
+    private static String readExistingUserId(String prompt) {
+        String input;
+        while (true) {
+            System.out.print(prompt);
+            input = scanner.nextLine().trim();
+            if ("0".equals(input)) {
+                return "0";
+            }
+            if (!ValidationUtils.hasText(input)) {
+                System.out.println("User ID cannot be empty. Please try again.");
+                continue;
+            }
+            if (userService == null || userService.getUserById(input) == null) {
+                System.out.printf("No user found with ID %s. Enter a valid user ID or 0 to skip.%n", input);
+                continue;
+            }
+            return input;
+        }
+    }
+
+    // Permission check methods
+    private static boolean isAdmin() {
+        if (userService == null || userService.getCurrentUser() == null) {
+            return false;
+        }
+        return "Admin User".equals(userService.getCurrentUser().getRole());
+    }
+
+    private static boolean isLoggedIn() {
+        return userService != null && userService.getCurrentUser() != null;
+    }
+
+    private static void checkAdminPermission(String action) {
+        if (!isAdmin()) {
+            System.out.println("Access Denied: Only Admin users can " + action + ".");
+            System.out.println("Your current role: " +
+                    (isLoggedIn() ? userService.getCurrentUser().getRole() : "Not logged in"));
+            returnToMain();
+        }
+    }
+
+    private static void checkLoggedInPermission(String action) {
+        if (!isLoggedIn()) {
+            System.out.println("Access Denied: You must be logged in to " + action + ".");
+            System.out.println("Please login or sign up first.");
+            System.out.println();
+            initialLoginMenu();
+        }
+    }
+
     // Interactive method to create a new project
 
     public static String createProjectInteractive() {
+        // Check logged in permission for add (RegularUser and Admin can add)
+        checkLoggedInPermission("create projects");
+
         while (true) {
             System.out.printf("Enter Project Type %n 1. Software %n 2. Hardware %n 3. Exit: ");
             int typeChoice = readIntInRange("", 1, 3);
@@ -169,12 +222,14 @@ public class ConsoleMenu {
 
             if (typeChoice == 1) {
                 String language = readNonEmptyText("Enter Programming Language: ");
-                SoftwareProject project = new SoftwareProject(name, description, "Software", teamSize, language, projectBudget);
+                SoftwareProject project = new SoftwareProject(name, description, "Software", teamSize, language,
+                        projectBudget);
                 projectService.addProject(project);
                 return "Software project was created successfully";
             } else {
                 String hardwareType = readNonEmptyText("Enter Hardware Type: ");
-                HardwareProject project = new HardwareProject(name, description, "Hardware", teamSize, hardwareType, projectBudget);
+                HardwareProject project = new HardwareProject(name, description, "Hardware", teamSize, hardwareType,
+                        projectBudget);
                 projectService.addProject(project);
                 return "Hardware project was created successfully";
             }
@@ -210,8 +265,9 @@ public class ConsoleMenu {
             System.out.println();
         }
 
-        System.out.printf("%s 1. %s%n 2. %s%n 3. %s%n 4. %s%n 5. %s%n 6. %s%n%n", "", "Manage Projects", "Manage Tasks ",
-                "View Status Reports", "Switch User","Testing", "Exit");
+        System.out.printf("%s 1. %s%n 2. %s%n 3. %s%n 4. %s%n 5. %s%n 6. %s%n%n", "", "Manage Projects",
+                "Manage Tasks ",
+                "View Status Reports", "Switch User", "Testing", "Exit");
         int choice = readIntInRange("Enter your choice __", 1, 6);
 
         switch (choice) {
@@ -282,9 +338,10 @@ public class ConsoleMenu {
 
     public static void projectCatalog() {
         printingTitle("PROJECT CATALOG ");
-        System.out.printf("%s 1. %s%n 2. %s%n 3. %s%n 4. %s%n%n", "", "View All Projects", "Software Projects Only",
-                "Hardware Projects Only", "Search by Budget Range");
-        int input = readIntInRange("Enter filter choice __", 1, 4);
+        System.out.printf("%s 1. %s%n 2. %s%n 3. %s%n 4. %s%n 5. %s%n%n", "", "View All Projects",
+                "Software Projects Only",
+                "Hardware Projects Only", "Search by Budget Range", "Assign User to Project");
+        int input = readIntInRange("Enter filter choice __", 1, 5);
 
         switch (input) {
             case 1:
@@ -307,6 +364,10 @@ public class ConsoleMenu {
                 } else {
                     projectService.searchByBudgetRange(min, max);
                 }
+                break;
+
+            case 5:
+                assignUserToProjectMenu();
                 break;
 
             default:
@@ -335,7 +396,7 @@ public class ConsoleMenu {
 
         enterProjectId();
 
-        //     returnToMain();
+        // returnToMain();
 
     }
 
@@ -356,14 +417,27 @@ public class ConsoleMenu {
             return;
         }
 
-        System.out.printf("%-5s %-20s %-30s%n", "ID", "TASK NAME", "STATUS");
+        System.out.printf("%-5s %-20s %-30s %-15s %-30s%n", "ID", "TASK NAME", "STATUS", "ASSIGNED USER", "USER EMAIL");
         System.out
-                .println("-----------------------------------------------------------");
+                .println(
+                        "------------------------------------------------------------------------------------------------------------------------");
         for (Task t : tasks) {
-            System.out.printf("%-5s %-20s %-30s%n ", t.getTaskId(), t.getTaskName(), t.getTaskStatus());
+            String userId = t.getAssignedUserId();
+            String userName = "Unassigned";
+            String userEmail = "-";
+            if (userId != null && userService != null) {
+                User assignedUser = userService.getUserById(userId);
+                if (assignedUser != null) {
+                    userName = assignedUser.getName();
+                    userEmail = assignedUser.getEmail();
+                }
+            }
+            System.out.printf("%-5s %-20s %-30s %-15s %-30s%n ",
+                    t.getTaskId(), t.getTaskName(), t.getTaskStatus(), userName, userEmail);
         }
         System.out
-                .println("------------------------------------------------------------");
+                .println(
+                        "------------------------------------------------------------------------------------------------------------------------");
 
         System.out.printf("%n%n");
 
@@ -378,18 +452,31 @@ public class ConsoleMenu {
             return;
         }
 
-        System.out.printf("%-5s %-20s %-30s%n", "ID", "TASK NAME", "STATUS");
+        System.out.printf("%-5s %-20s %-30s %-15s %-30s%n", "ID", "TASK NAME", "STATUS", "ASSIGNED USER", "USER EMAIL");
         System.out
-                .println("-----------------------------------------------------------");
+                .println(
+                        "------------------------------------------------------------------------------------------------------------------------");
         for (Task t : tasks) {
-            System.out.printf("%-5s %-20s %-30s%n ", t.getTaskId(), t.getTaskName(), t.getTaskStatus());
+            String userId = t.getAssignedUserId();
+            String userName = "Unassigned";
+            String userEmail = "-";
+            if (userId != null && userService != null) {
+                User assignedUser = userService.getUserById(userId);
+                if (assignedUser != null) {
+                    userName = assignedUser.getName();
+                    userEmail = assignedUser.getEmail();
+                }
+            }
+            System.out.printf("%-5s %-20s %-30s %-15s %-30s%n ",
+                    t.getTaskId(), t.getTaskName(), t.getTaskStatus(), userName, userEmail);
         }
         System.out
-                .println("------------------------------------------------------------");
+                .println(
+                        "------------------------------------------------------------------------------------------------------------------------");
 
         System.out.printf("%n%n");
 
-        //ADD PERCENTAGE SYMBOL
+        // ADD PERCENTAGE SYMBOL
         System.out.printf("Completion Rate : %f %%  %n", completionRate);
 
         System.out.printf("Options:  %n");
@@ -412,7 +499,6 @@ public class ConsoleMenu {
             default:
                 mainMenu();
         }
-
 
     }
 
@@ -437,15 +523,35 @@ public class ConsoleMenu {
         System.out.println("Project Type: " + project.type);
         System.out.println("Project Team Size: " + project.teamSize);
         System.out.printf("Project Budget: %f%n", project.budget);
-        System.out.printf("Associated Tasks: %n%n");
+
+        // Display assigned users
+        List<String> assignedUserIds = project.getAssignedUserIds();
+        if (!assignedUserIds.isEmpty() && userService != null) {
+            System.out.println("\nAssigned Users:");
+            System.out.printf("%-10s %-20s %-30s %-15s%n", "ID", "Name", "Email", "Role");
+            System.out.println("--------------------------------------------------------------------------------");
+            for (String userId : assignedUserIds) {
+                User user = userService.getUserById(userId);
+                if (user != null) {
+                    System.out.printf("%-10s %-20s %-30s %-15s%n",
+                            user.getId(), user.getName(), user.getEmail(), user.getRole());
+                }
+            }
+            System.out.println("--------------------------------------------------------------------------------");
+        } else {
+            System.out.println("\nNo users assigned to this project.");
+        }
+
+        System.out.printf("%nAssociated Tasks: %n%n");
 
         displayProjectTaks(tasks, completionRate);
-
-
 
     }
 
     public static void addingNewTaskMenu() {
+        // Check logged in permission for add (RegularUser and Admin can add)
+        checkLoggedInPermission("add tasks");
+
         printingTitle("ADD NEW TASK");
 
         String taskName = readNonEmptyText("Enter task name: ");
@@ -457,13 +563,54 @@ public class ConsoleMenu {
         }
         String status = readValidTaskStatus("Enter Task Status (Pending, In Progress, Completed): ");
 
-        taskService.addTask(new Task(taskName, status, projectId));
+        // Display available users and allow selection
+        System.out.println("\nAvailable Users:");
+        List<User> users = userService.getAllUsers();
+        if (users.isEmpty()) {
+            System.out.println("No users available. Task will be created without assignment.");
+            System.out.println("You can assign a user later or create a user first.");
+            taskService.addTask(new Task(taskName, status, projectId));
+            System.out.printf("Task \"%s\" added successfully to project %s (No user assigned)%n", taskName, projectId);
+        } else {
+            System.out.printf("%-10s %-20s %-30s %-15s%n", "ID", "Name", "Email", "Role");
+            System.out.println("--------------------------------------------------------------------------------");
+            for (User u : users) {
+                System.out.printf("%-10s %-20s %-30s %-15s%n",
+                        u.getId(), u.getName(), u.getEmail(), u.getRole());
+            }
+            System.out.println("--------------------------------------------------------------------------------");
 
-        System.out.printf("Task \"%s\" added successfully to project %s%n", taskName, projectId);
+            String userId = readExistingUserId("Enter User ID to assign (or 0 to skip): ");
+            Task task;
+            if ("0".equals(userId)) {
+                task = new Task(taskName, status, projectId);
+                System.out.printf("Task \"%s\" added successfully to project %s (No user assigned)%n", taskName,
+                        projectId);
+            } else {
+                task = new Task(taskName, status, projectId, userId);
+                User assignedUser = userService.getUserById(userId);
+                System.out.printf("Task \"%s\" added successfully to project %s%n", taskName, projectId);
+                System.out.printf("Assigned User: %s (%s) - %s%n",
+                        assignedUser.getName(), assignedUser.getEmail(), assignedUser.getRole());
+            }
+            taskService.addTask(task);
+        }
         returnToMain();
     }
 
     public static void updatingTask() {
+        // Check admin permission for update
+        if (!isAdmin()) {
+            System.out.println("Access Denied: Only Admin users can update tasks.");
+            if (isLoggedIn()) {
+                System.out.println("Your current role: " + userService.getCurrentUser().getRole());
+            } else {
+                System.out.println("You are not logged in.");
+            }
+            returnToMain();
+            return;
+        }
+
         printingTitle("Updating TASK");
         String taskId = readNonEmptyText("Enter task Id: ");
         String status = readValidTaskStatus("Enter new Task status (Pending, In Progress, Completed): ");
@@ -478,6 +625,18 @@ public class ConsoleMenu {
     }
 
     public static void removingTask() {
+        // Check admin permission for delete
+        if (!isAdmin()) {
+            System.out.println("Access Denied: Only Admin users can delete tasks.");
+            if (isLoggedIn()) {
+                System.out.println("Your current role: " + userService.getCurrentUser().getRole());
+            } else {
+                System.out.println("You are not logged in.");
+            }
+            returnToMain();
+            return;
+        }
+
         printingTitle("Deleting TASK");
         String taskId = readNonEmptyText("Enter task Id: ");
 
@@ -487,6 +646,77 @@ public class ConsoleMenu {
         returnToMain();
     }
 
+    // Initial login/signup menu - appears when app starts
+    public static void initialLoginMenu() {
+        printingTitle("WELCOME TO PROJECT MANAGEMENT SYSTEM");
+        System.out.println();
+        System.out.println("1. Login");
+        System.out.println("2. Sign Up");
+        System.out.println("3. Continue Without Account (Limited Access)");
+        System.out.println();
+
+        int choice = readIntInRange("Enter your choice: ", 1, 3);
+
+        switch (choice) {
+            case 1:
+                loginUserMenu();
+                break;
+            case 2:
+                signUpMenu();
+                break;
+            case 3:
+                System.out.println("Continuing without account. You will have limited access (view only).");
+                System.out.println();
+                mainMenu();
+                break;
+            default:
+                System.out.println("Invalid choice!");
+                initialLoginMenu();
+        }
+    }
+
+    public static void signUpMenu() {
+        printingTitle("SIGN UP");
+        String name = readNonEmptyText("Enter User Name: ");
+
+        String email;
+        while (true) {
+            email = readNonEmptyText("Enter User Email: ");
+            if (!ValidationUtils.validateEmail(email)) {
+                System.out.println("Invalid email format. Please enter a valid email address.");
+                continue;
+            }
+            break;
+        }
+
+        String role;
+        while (true) {
+            role = readNonEmptyText("Enter User Role (Regular/Admin): ");
+            if (!ValidationUtils.validateUserRole(role)) {
+                System.out.println("Invalid role. Supported roles: Regular, Admin. Try again.");
+                continue;
+            }
+            break;
+        }
+
+        User user;
+        if (role.equalsIgnoreCase("Admin")) {
+            user = userService.createAdminUser(name, email);
+        } else {
+            user = userService.createRegularUser(name, email);
+        }
+
+        System.out.printf("User created successfully!%n");
+        System.out.println("User Details: " + user.toString());
+        System.out.println();
+
+        // Auto-login after signup
+        userService.login(user.getId());
+        System.out.println("You have been automatically logged in.");
+        System.out.println();
+
+        mainMenu();
+    }
 
     // User management methods
     public static void createUserMenu() {
@@ -568,6 +798,21 @@ public class ConsoleMenu {
 
     public static void loginUserMenu() {
         printingTitle("LOGIN");
+
+        // Show available users if any exist
+        List<User> users = userService.getAllUsers();
+        if (!users.isEmpty()) {
+            System.out.println("Available Users:");
+            System.out.printf("%-10s %-20s %-30s %-15s%n", "ID", "Name", "Email", "Role");
+            System.out.println("--------------------------------------------------------------------------------");
+            for (User u : users) {
+                System.out.printf("%-10s %-20s %-30s %-15s%n",
+                        u.getId(), u.getName(), u.getEmail(), u.getRole());
+            }
+            System.out.println("--------------------------------------------------------------------------------");
+            System.out.println();
+        }
+
         String userId = readNonEmptyText("Enter User ID: ");
 
         User user = userService.login(userId);
@@ -575,12 +820,28 @@ public class ConsoleMenu {
             System.out.println("Login successful!");
             user.displayRole();
             System.out.println();
+            mainMenu();
         } else {
             System.out.println("User not found with ID: " + userId);
             System.out.println();
+            System.out.println("1. Try again");
+            System.out.println("2. Sign up");
+            System.out.println("3. Continue without account");
+            int choice = readIntInRange("Enter your choice: ", 1, 3);
+            switch (choice) {
+                case 1:
+                    loginUserMenu();
+                    break;
+                case 2:
+                    signUpMenu();
+                    break;
+                case 3:
+                    System.out.println("Continuing without account. You will have limited access (view only).");
+                    System.out.println();
+                    mainMenu();
+                    break;
+            }
         }
-
-        returnToMain();
     }
 
     public static void displayAllUsers() {
@@ -611,7 +872,53 @@ public class ConsoleMenu {
         returnToMain();
     }
 
-    //Enter project id to display project details
+    public static void assignUserToProjectMenu() {
+        printingTitle("ASSIGN USER TO PROJECT");
+
+        String projectId = readExistingProjectId("Enter Project ID (or 0 to cancel): ");
+        if ("0".equals(projectId)) {
+            System.out.println("Cancelled.");
+            projectCatalog();
+            return;
+        }
+
+        List<User> users = userService.getAllUsers();
+        if (users.isEmpty()) {
+            System.out.println("No users available. Please create a user first.");
+            projectCatalog();
+            return;
+        }
+
+        System.out.println("\nAvailable Users:");
+        System.out.printf("%-10s %-20s %-30s %-15s%n", "ID", "Name", "Email", "Role");
+        System.out.println("--------------------------------------------------------------------------------");
+        for (User u : users) {
+            System.out.printf("%-10s %-20s %-30s %-15s%n",
+                    u.getId(), u.getName(), u.getEmail(), u.getRole());
+        }
+        System.out.println("--------------------------------------------------------------------------------");
+
+        String userId = readExistingUserId("Enter User ID to assign (or 0 to cancel): ");
+        if ("0".equals(userId)) {
+            System.out.println("Cancelled.");
+            projectCatalog();
+            return;
+        }
+
+        boolean success = projectService.assignUserToProject(projectId, userId);
+        if (success) {
+            User user = userService.getUserById(userId);
+            Project project = projectService.getProjectById(projectId);
+            System.out.printf("User %s (%s) successfully assigned to project %s (%s)%n",
+                    user.getName(), user.getEmail(), project.name, project.id);
+        } else {
+            System.out.println("Failed to assign user to project.");
+        }
+
+        returnToMain();
+    }
+
+    // Enter project id to display project details
     public static void enterProjectId() {
         String projectId = readExistingProjectId("Enter project id to view details (or 0 to return to main menu): ");
         if (projectId.equals("0")) {
@@ -622,7 +929,9 @@ public class ConsoleMenu {
         }
     }
 
-    //Managing Task Add tasks to specific project, Asging Task status to completed or pending, in Progress, update or delete task, view all tasks per project progress details
+    // Managing Task Add tasks to specific project, Asging Task status to completed
+    // or pending, in Progress, update or delete task, view all tasks per project
+    // progress details
     public static void taskMainMenu() {
         printingTitle("TASK MANAGEMENT");
 
@@ -651,28 +960,27 @@ public class ConsoleMenu {
                 taskMainMenu();
         }
 
-
     }
 
-    //View Project Status Report
-    public static void  printProjectStatusReporting() {
+    // View Project Status Report
+    public static void printProjectStatusReporting() {
         List<ProjectStatusReportDto> projectStatusReport = reportService.getProjectStatusReport();
         double average = reportService.calculateAverageProjectStatusReport();
         printingTitle("PROJECT STATUS REPORT");
         System.out.println("Project ID | Project Name | Tasks | Completed ");
         System.out.println("----------------------------------------");
         for (ProjectStatusReportDto report : projectStatusReport) {
-            System.out.printf("%-10s | %-15s | %-5d | %-5d %n", report.projectId, report.projectName, report.Tasks, report.Completed);
+            System.out.printf("%-10s | %-15s | %-5d | %-5d %n", report.projectId, report.projectName, report.Tasks,
+                    report.Completed);
         }
         System.out.println("----------------------------------------");
 
-        System.out.println("AVERAGE COMPLETION: "+ average+"%");
+        System.out.println("AVERAGE COMPLETION: " + average + "%");
 
         returnToMain();
     }
 
-//Testing SCREEN
-
+    // Testing SCREEN
 
     // Testing SCREEN
     public static void TestingUserMenu() {
@@ -685,7 +993,6 @@ public class ConsoleMenu {
             System.out.println("3. Add Task");
             System.out.println("4. View Task");
             System.out.println("5. Update Task Status");
-
 
             System.out.println("6. Exit Testing Mode");
 
@@ -705,7 +1012,7 @@ public class ConsoleMenu {
                     printProjectStatusReporting();
                     break;
                 case 5:
-                  updatingTask();
+                    updatingTask();
                     break;
                 case 6:
                     System.out.println("Exiting Testing Mode...");
