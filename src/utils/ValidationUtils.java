@@ -1,8 +1,5 @@
 package utils;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -80,20 +77,12 @@ public final class ValidationUtils {
         return value != null && !value.trim().isEmpty();
     }
 
-
-    public static boolean isValidPositiveNumber(String value) {
-        if (value == null || value.trim().isEmpty()) {
-            return false;
-        }
-        try {
-            int number = Integer.parseInt(value.trim());
-            return number > 0;
-        } catch (NumberFormatException e) {
-            return false;
-        }
-    }
-
-
+    /**
+     * Validates if a string represents a valid date in the specified format.
+     * @param dateString the date string to validate
+     * @param pattern the expected date format (e.g., "yyyy-MM-dd")
+     * @return true if the date string is valid and matches the format
+     */
     public static boolean validateDateFormat(String dateString, String pattern) {
         if (dateString == null || pattern == null) {
             return false;
@@ -106,10 +95,4 @@ public final class ValidationUtils {
             return false;
         }
     }
-
-
-    public static boolean isValidText(String value) {
-        return value != null && value.trim().matches("[a-zA-Z ]+");
-    }
-
 }
