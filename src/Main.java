@@ -1,5 +1,6 @@
 
 import models.SoftwareProject;
+import models.Task;
 import models.HardwareProject;
 import services.ProjectService;
 import services.ReportService;
@@ -22,24 +23,22 @@ public class Main {
 
         ConsoleMenu.setUserService(userService);
         //
-        SoftwareProject sp1 = new SoftwareProject("P001", "AI System", "Build an AI model", "Software", 5, "Java",
+        SoftwareProject sp1 = new SoftwareProject( "AI System", "Build an AI model", "Software", 5, "Java",
                 1500);
-        HardwareProject hp1 = new HardwareProject("P002", "IoT Device", "Create a smart sensor", "Hardware", 3,
+        HardwareProject hp1 = new HardwareProject( "IoT Device", "Create a smart sensor", "Hardware", 3,
                 "Microcontroller", 1500);
+Task t1 = new Task("Task 1",  "Completed", "P001");
+Task t2 = new Task("Task 2", "Pending", "P002");
 
         projectService.addProject(sp1);
         projectService.addProject(hp1);
 
-        // // Display all projects
-        // ConsoleMenu.displayProjects(service.getAllProjects());
-        //
-        // // Display only Software projects
-        // ConsoleMenu.displayProjects(service.getAllProjects(), "Software");
+        taskService.addTask(t1);
+        taskService.addTask(t2);
 
-        // ConsoleMenu.projectCatalog();
-
-        ConsoleMenu.addingNewTaskMenu();
-        ConsoleMenu.printProjectStatusReport();
+        // Start with initial login menu
+        ConsoleMenu.initialLoginMenu();
+       
 
         // Display detailed info for one project
 
