@@ -6,6 +6,7 @@ public abstract class User {
     protected String email;
     protected String role;
 
+
     private static int idCounter = 1;
 
     public User(String name, String email, String role) {

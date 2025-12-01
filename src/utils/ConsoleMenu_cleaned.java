@@ -580,7 +580,8 @@ public class ConsoleMenu_cleaned {
             System.out.println("3. Add Task");
             System.out.println("4. View Task");
             System.out.println("5. Update Task Status");
-            System.out.println("6. Exit Testing Mode");
+            System.out.println("6.  Task Reporting");
+            System.out.println("7. Exit Testing Mode");
             System.out.print("Enter your choice: ");
 
             choice = scanner.nextInt();
@@ -600,18 +601,19 @@ public class ConsoleMenu_cleaned {
                     displayCurrentUser();
                     break;
                 case 5:
-                    userService.logout();
-                    System.out.println("Logged out successfully.");
-                    System.out.println();
-                    mainMenu();
+                    updatingTask();
                     break;
                 case 6:
+                   printProjectStatusReporting();
+                    break;
+
+                case 7:
                     System.out.println("Exiting Testing Mode...");
                     break;
                 default:
                     System.out.println("Invalid choice! Please try again.");
             }
-        } while (choice != 6); // loop until user chooses to exit
+        } while (choice != 7); // loop until user chooses to exit
     }
 
 }

@@ -260,6 +260,26 @@ public class ConsoleMenu {
         }
     }
 
+    // Returning to the main menu with validation
+    public static void returnToTesting() {
+        while (true) {
+            System.out.print("Enter 100 to return to main menu: ");
+            if (scanner.hasNextInt()) {
+                int inp = scanner.nextInt();
+                scanner.nextLine(); // consume newline
+                if (inp == 100) {
+                    TestingUserMenu();
+                    break;
+                } else {
+                    System.out.println("Invalid input! Please enter 100.");
+                }
+            } else {
+                System.out.println("Invalid input! Please enter a number.");
+                scanner.nextLine(); // clear invalid input
+            }
+        }
+    }
+
     public static void projectCatalog() {
         printingTitle("PROJECT CATALOG ");
         System.out.printf("%s 1. %s%n 2. %s%n 3. %s%n 4. %s%n%n", "", "View All Projects", "Software Projects Only",
@@ -665,6 +685,8 @@ public class ConsoleMenu {
             System.out.println("3. Add Task");
             System.out.println("4. View Task");
             System.out.println("5. Update Task Status");
+
+
             System.out.println("6. Exit Testing Mode");
 
             choice = readIntInRange("Enter your choice: ", 1, 6);
@@ -680,13 +702,10 @@ public class ConsoleMenu {
                     addingNewTaskMenu();
                     break;
                 case 4:
-                    displayCurrentUser();
+                    printProjectStatusReporting();
                     break;
                 case 5:
-                    userService.logout();
-                    System.out.println("Logged out successfully.");
-                    System.out.println();
-                    mainMenu();
+                  updatingTask();
                     break;
                 case 6:
                     System.out.println("Exiting Testing Mode...");
