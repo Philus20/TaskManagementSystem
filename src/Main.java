@@ -10,16 +10,14 @@ import utils.ConsoleMenu;
 
 public class Main {
     public static void main(String[] args) {
-        ProjectService projectService = new ProjectService();
+        ProjectService projectService = new ProjectService(20);
         TaskService taskService = new TaskService();
-        ReportService reportService = new ReportService(projectService, taskService);
         UserService userService = new UserService();
 
         ConsoleMenu.setProjectService(projectService);
 
         ConsoleMenu.setTaskService(taskService);
 
-        ConsoleMenu.setReportService(reportService);
 
         ConsoleMenu.setUserService(userService);
         //
@@ -27,8 +25,8 @@ public class Main {
                 1500);
         HardwareProject hp1 = new HardwareProject( "IoT Device", "Create a smart sensor", "Hardware", 3,
                 "Microcontroller", 1500);
-Task t1 = new Task("Task 1",  "Completed", "P001");
-Task t2 = new Task("Task 2", "Pending", "P002");
+Task t1 = new Task("Task 1",  "Completed", "P0000");
+Task t2 = new Task("Task 2", "Pending", "P0001");
 
         projectService.addProject(sp1);
         projectService.addProject(hp1);
@@ -41,6 +39,8 @@ Task t2 = new Task("Task 2", "Pending", "P002");
        
 
         // Display detailed info for one project
+
+
 
     }
 }

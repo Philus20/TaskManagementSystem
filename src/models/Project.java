@@ -1,60 +1,31 @@
-
 package models;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public abstract class Project {
-    public String id;
-    public String name;
-    public String description;
-    public String type;
-    public int teamSize;
-    public double budget;
-    public List<String> assignedUserIds;
+    private  String id;
+    private final String name;
+    private final String description;
+    private final String type;
+    private final int teamSize;
+    private final double budget;
 
-    private  static  int idCounter=0;
-
-
-
-    public Project( String name, String description, String type, int teamSize,double budget) {
-        this.id = "P"+String.format("%04d", idCounter++);;
+    public Project(String id, String name, String description, String type, int teamSize, double budget) {
+        this.id = id;
         this.name = name;
         this.description = description;
         this.type = type;
         this.teamSize = teamSize;
         this.budget = budget;
-        this.assignedUserIds = new ArrayList<>();
-    }
-    public String getId (){
-
-        return id;
     }
 
-    public String getType (){
+    public String getId() { return id; }
+    public String setId(String id) { return this.id = id; }
+    public String getName() { return name; }
+    public String getDescription() { return description; }
+    public String getType() { return type; }
+    public int getTeamSize() { return teamSize; }
+    public double getBudget() { return budget; }
 
-        return type;
-    }
+    public abstract void displayProjects();
 
-    public double getBudget (){
-
-        return budget;
-    }
-
-    public abstract void displayAttributes();
-
-    public void assignUser(String userId) {
-        if (!assignedUserIds.contains(userId)) {
-            assignedUserIds.add(userId);
-        }
-    }
-
-    public void removeUser(String userId) {
-        assignedUserIds.remove(userId);
-    }
-
-    public List<String> getAssignedUserIds() {
-        return new ArrayList<>(assignedUserIds);
-    }
 
 }

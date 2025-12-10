@@ -376,9 +376,9 @@ public class ConsoleMenu {
     }
 
     // Generic display for all projects
-    public static void displayProjects(List<Project> projects) {
+    public static void displayProjects(Project[] projects) {
 
-        if (projects.isEmpty()) {
+        if (projects == null) {
             System.out.println("No projects found.");
             return;
         }
@@ -387,7 +387,7 @@ public class ConsoleMenu {
         System.out
                 .println("-------------------------------------------------------------------------------------------");
         for (Project p : projects) {
-            System.out.printf("%-5s %-20s %-30s %-10s %-10d%n", p.id, p.name, p.description, p.type, p.teamSize);
+            System.out.printf("%-5s %-20s %-30s %-10s %-10d%n", p.getId(), p.getName(), p.getDescription(), p.getType(), p.getTeamSize());
         }
         System.out
                 .println("-------------------------------------------------------------------------------------------");
@@ -401,14 +401,14 @@ public class ConsoleMenu {
     }
 
     // Overloaded: Display only projects of a given type
-    public static void displayProjects(List<Project> projects, String projectType) {
-        List<Project> filtered = projects.stream()
-                .filter(p -> p.type.equalsIgnoreCase(projectType))
-                .toList();
-
-        System.out.println("=== " + projectType + " Projects ===");
-        displayProjects(filtered);
-    }
+//    public static void displayProjects(List<Project> projects, String projectType) {
+//        Project[] filtered = projects.stream()
+//                .filter(p -> p.type.equalsIgnoreCase(projectType))
+//                .toList();
+//
+//        System.out.println("=== " + projectType + " Projects ===");
+//        displayProjects(filtered);
+//    }
 
     // Generic display for all TaskPerProject
     public static void displayProjectTaks(List<Task> tasks) {
@@ -506,45 +506,45 @@ public class ConsoleMenu {
     public static void displayProjectDetails(String id) {
 
         Project project = projectService.getProjectById(id);
-        List<Task> tasks = taskService.getTasksByProjectId(id);
+        Task[] tasks = taskService.getTasksByProjectId(id);
 
         if (project == null) {
             System.out.println("Project not found.");
             return;
         }
-        if (tasks.isEmpty()) {
+        if (tasks == null || tasks.length == 0) {
             System.out.println("No tasks found.");
             return;
         }
-        double completionRate = taskService.calculateCompletionRate(project.id);
-        printingTitle("PROJECT DETAILS : " + project.id);
+        double completionRate = taskService.calculateCompletionRate(project.getId());
+        printingTitle("PROJECT DETAILS : " + project.getId());
 
-        System.out.println("Project Name: " + project.name);
-        System.out.println("Project Type: " + project.type);
-        System.out.println("Project Team Size: " + project.teamSize);
-        System.out.printf("Project Budget: %f%n", project.budget);
+        System.out.println("Project Name: " + project.getName());
+        System.out.println("Project Type: " + project.getType());
+        System.out.println("Project Team Size: " + project.getTeamSize());
+        System.out.printf("Project Budget: %f%n", project.getBudget());
 
         // Display assigned users
-        List<String> assignedUserIds = project.getAssignedUserIds();
-        if (!assignedUserIds.isEmpty() && userService != null) {
-            System.out.println("\nAssigned Users:");
-            System.out.printf("%-10s %-20s %-30s %-15s%n", "ID", "Name", "Email", "Role");
-            System.out.println("--------------------------------------------------------------------------------");
-            for (String userId : assignedUserIds) {
-                User user = userService.getUserById(userId);
-                if (user != null) {
-                    System.out.printf("%-10s %-20s %-30s %-15s%n",
-                            user.getId(), user.getName(), user.getEmail(), user.getRole());
-                }
-            }
-            System.out.println("--------------------------------------------------------------------------------");
-        } else {
-            System.out.println("\nNo users assigned to this project.");
-        }
+//        String[] assignedUserIds = projectService.getAssignedUsers();
+//        if (!assignedUserIds == null && userService != null) {
+//            System.out.println("\nAssigned Users:");
+//            System.out.printf("%-10s %-20s %-30s %-15s%n", "ID", "Name", "Email", "Role");
+//            System.out.println("--------------------------------------------------------------------------------");
+//            for (String userId : assignedUserIds) {
+//                User user = userService.getUserById(userId);
+//                if (user != null) {
+//                    System.out.printf("%-10s %-20s %-30s %-15s%n",
+//                            user.getId(), user.getName(), user.getEmail(), user.getRole());
+//                }
+//            }
+//            System.out.println("--------------------------------------------------------------------------------");
+//        } else {
+//            System.out.println("\nNo users assigned to this project.");
+//        }
 
         System.out.printf("%nAssociated Tasks: %n%n");
 
-        displayProjectTaks(tasks, completionRate);
+//        displayProjectTaks(tasks, completionRate);
 
     }
 
@@ -910,7 +910,7 @@ public class ConsoleMenu {
             User user = userService.getUserById(userId);
             Project project = projectService.getProjectById(projectId);
             System.out.printf("User %s (%s) successfully assigned to project %s (%s)%n",
-                    user.getName(), user.getEmail(), project.name, project.id);
+                    user.getName(), user.getEmail(), project.getName(), project.getId());
         } else {
             System.out.println("Failed to assign user to project.");
         }
@@ -964,18 +964,8 @@ public class ConsoleMenu {
 
     // View Project Status Report
     public static void printProjectStatusReporting() {
-        List<ProjectStatusReportDto> projectStatusReport = reportService.getProjectStatusReport();
-        double average = reportService.calculateAverageProjectStatusReport();
-        printingTitle("PROJECT STATUS REPORT");
-        System.out.println("Project ID | Project Name | Tasks | Completed ");
-        System.out.println("----------------------------------------");
-        for (ProjectStatusReportDto report : projectStatusReport) {
-            System.out.printf("%-10s | %-15s | %-5d | %-5d %n", report.projectId, report.projectName, report.Tasks,
-                    report.Completed);
-        }
-        System.out.println("----------------------------------------");
+      reportService.generateReport();
 
-        System.out.println("AVERAGE COMPLETION: " + average + "%");
 
         returnToMain();
     }
