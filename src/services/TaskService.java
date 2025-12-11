@@ -1,101 +1,122 @@
 package services;
 
+import Repository.TaskRepository;
+import interfaces.IdGenerator;
+import interfaces.ITaskService;
 import models.Task;
 
-import java.util.Arrays;
+/**
+ * TaskService following SOLID principles:
+ * - Single Responsibility: Manages task business logic only
+ * - Dependency Inversion: Depends on TaskRepository abstraction, not concrete implementation
+ * - Open/Closed: Can be extended without modification
+ */
+public class TaskService implements ITaskService {
 
-public class TaskService {
+    private final TaskRepository taskRepository;
+    private final IdGenerator taskIdGenerator;
 
-    // A repository to store Tasks (fixed capacity)
-    private final Task[] tasks;
-
-    // Constructor to initialize the Tasks repo
-    public TaskService() {
-        tasks = new Task[50]; // pick capacity you want
+    public TaskService(TaskRepository taskRepository, IdGenerator taskIdGenerator) {
+        if (taskRepository == null) throw new IllegalArgumentException("TaskRepository cannot be null");
+        if (taskIdGenerator == null) throw new IllegalArgumentException("TaskIdGenerator cannot be null");
+        this.taskRepository = taskRepository;
+        this.taskIdGenerator = taskIdGenerator;
     }
 
-    // Add a new Task (only if id doesn't exist)
+    /**
+     * Add a new task with auto-generated ID
+     */
     public void addTask(Task task) {
-        if (task == null) return;
-        // check duplicate id
-        for (Task t : tasks) {
-            if (t != null && t.getTaskId().equals(task.getTaskId())) {
-                System.out.println("Task with id " + task.getTaskId() + " already exists.");
-                return;
-            }
+        if (task == null) {
+            throw new IllegalArgumentException("Task cannot be null");
         }
-        // find first free slot
-        for (int i = 0; i < tasks.length; i++) {
-            if (tasks[i] == null) {
-                tasks[i] = task;
-                return;
-            }
+
+        // Generate ID if not set
+        if (task.getTaskId() == null || task.getTaskId().isEmpty()) {
+            String generatedId = taskIdGenerator.generate();
+            task.setTaskId(generatedId);
         }
-        System.out.println("Task repository is full.");
+
+        // Check for duplicate task ID
+        Task existing = taskRepository.findByTaskId(task.getTaskId());
+        if (existing != null) {
+            throw new IllegalStateException("Task with id " + task.getTaskId() + " already exists.");
+        }
+
+        int index = taskIdGenerator.elementIndex(task.getTaskId());
+        taskRepository.add(task, index);
     }
 
-    // Return all tasks as a trimmed array (no nulls)
+    /**
+     * Get all tasks
+     */
     public Task[] getAllTasks() {
-        int count = 0;
-        for (Task t : tasks) if (t != null) count++;
-        Task[] out = new Task[count];
-        int i = 0;
-        for (Task t : tasks) if (t != null) out[i++] = t;
-        return out;
+        return taskRepository.getAll();
     }
 
-    // Get a task by id (arrays-only)
+    /**
+     * Get task by ID
+     */
     public Task getTaskById(String taskId) {
         if (taskId == null) return null;
-        for (Task t : tasks) {
-            if (t != null && taskId.equals(t.getTaskId())) return t;
-        }
-        return null;
+        return taskRepository.findByTaskId(taskId);
     }
 
-    // Update a task status
+    /**
+     * Update task status
+     */
     public Task updateTaskStatus(String taskId, String taskStatus) {
         Task task = getTaskById(taskId);
         if (task != null) {
             task.setTaskStatus(taskStatus);
+            // Update in repository
+            int index = taskIdGenerator.elementIndex(taskId);
+            taskRepository.update(index, task);
         }
         return task;
     }
 
-    // Delete a task by id (compacts array)
+    /**
+     * Delete a task
+     */
     public void deleteTask(String taskId) {
         if (taskId == null) return;
-        for (int i = 0; i < tasks.length; i++) {
-            if (tasks[i] != null && taskId.equals(tasks[i].getTaskId())) {
-                // remove and shift left to compact
-                for (int j = i; j < tasks.length - 1; j++) tasks[j] = tasks[j + 1];
-                tasks[tasks.length - 1] = null;
-                return;
-            }
+        Task task = getTaskById(taskId);
+        if (task != null) {
+            int index = taskIdGenerator.elementIndex(taskId);
+            taskRepository.removeById(index);
         }
     }
 
-    // Get tasks by project id (already arrays-only)
+    /**
+     * Get tasks by project ID
+     */
     public Task[] getTasksByProjectId(String projectId) {
         if (projectId == null) return new Task[0];
-        Task[] result = new Task[tasks.length];
-        int count = 0;
-        for (Task t : tasks) {
-            if (t != null && projectId.equals(t.getProjectId())) {
-                result[count++] = t;
-            }
-        }
-        return Arrays.copyOf(result, count);
+        return taskRepository.findByProjectId(projectId);
     }
 
-    // Calculate completion rate for a project (arrays-only)
+    /**
+     * Calculate completion rate for a project
+     */
     public double calculateCompletionRate(String projectId) {
-        Task[] projTasks = getTasksByProjectId(projectId);
-        if (projTasks == null || projTasks.length == 0) return 0.0;
+        Task[] projectTasks = getTasksByProjectId(projectId);
+        if (projectTasks == null || projectTasks.length == 0) return 0.0;
+
         int completed = 0;
-        for (Task t : projTasks) {
-            if (t != null && "Completed".equalsIgnoreCase(t.getTaskStatus())) completed++;
+        for (Task t : projectTasks) {
+            if (t != null && "Completed".equalsIgnoreCase(t.getTaskStatus())) {
+                completed++;
+            }
         }
-        return (completed * 100.0) / projTasks.length;
+        return (completed * 100.0) / projectTasks.length;
+    }
+
+    /**
+     * Get tasks assigned to a user
+     */
+    public Task[] getTasksByAssignedUserId(String userId) {
+        if (userId == null) return new Task[0];
+        return taskRepository.findByAssignedUserId(userId);
     }
 }

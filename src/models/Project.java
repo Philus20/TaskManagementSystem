@@ -17,8 +17,12 @@ public abstract class Project {
         this.budget = budget;
     }
 
+//This are my setters
+    public void setId(String id) {  this.id = id; }
+
+
+    //These are my Gettere methods
     public String getId() { return id; }
-    public String setId(String id) { return this.id = id; }
     public String getName() { return name; }
     public String getDescription() { return description; }
     public String getType() { return type; }

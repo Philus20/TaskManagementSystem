@@ -10,4 +10,10 @@ public class GenerateUserId  implements IdGenerator{
     public String generate() {
         return "U" + String.format("%04d", counter++);
     }
+
+
+    @Override
+    public int elementIndex(String id) {
+        return Integer.parseInt(id.substring(1));
+    }
 }

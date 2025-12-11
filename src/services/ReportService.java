@@ -27,7 +27,7 @@ public class ReportService implements IReporting {
 
     // build the report and return it as an array (arrays-only)
     private ProjectStatusReportDto[] buildReport() {
-        Project[] projects = projectService.getAllProjectsComplete();
+        Project[] projects = projectService.getAllProjects();
         if (projects == null || projects.length == 0) {
             return new ProjectStatusReportDto[0];
         }

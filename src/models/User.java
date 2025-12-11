@@ -6,18 +6,23 @@ public abstract class User {
     protected String email;
     protected String role;
 
-
-    private static int idCounter = 1;
-
+    /**
+     * Constructor - ID should be set by service layer using IdGenerator
+     * Following Dependency Inversion Principle
+     */
     public User(String name, String email, String role) {
-        this.id = "U" + String.format("%04d", idCounter++);
         this.name = name;
         this.email = email;
         this.role = role;
+        // ID will be set by service layer
     }
 
     public String getId() {
         return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getName() {

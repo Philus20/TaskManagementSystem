@@ -11,4 +11,9 @@ public class GenerateTaskId implements IdGenerator {
         return "T" + String.format("%04d", counter++);
     }
 
+    @Override
+    public int elementIndex(String id) {
+        return Integer.parseInt(id.substring(1));
+    }
+
 }
