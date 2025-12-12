@@ -2,6 +2,10 @@ package Repository;
 
 import interfaces.IRepository;
 import models.Task;
+import utils.exceptions.EmptyProjectException;
+import utils.exceptions.EntityAttributeException;
+import utils.exceptions.TaskNotFoundException;
+import utils.exceptions.UserNotFoundException;
 
 import java.util.Arrays;
 
@@ -29,10 +33,10 @@ public class TaskRepository implements IRepository<Task> {
 
     @Override
     public void add(Task task, int index) {
-        if (task == null) throw new IllegalArgumentException("Task cannot be null");
+        if (task == null) throw new TaskNotFoundException("Task cannot be null");
         ensureCapacity(index);
         if (tasks[index] != null)
-            throw new IllegalStateException("Task already exists at index " + index);
+            throw new TaskNotFoundException("Task already exists at index " + index);
 
         tasks[index] = task;
     }
@@ -56,14 +60,14 @@ public class TaskRepository implements IRepository<Task> {
 
     @Override
     public void update(int index, Task task) {
-        if (index < 0) throw new IllegalArgumentException("Invalid index");
+        if (index < 0) throw new TaskNotFoundException("Invalid Index");
         ensureCapacity(index);
         tasks[index] = task;
     }
 
     @Override
     public void removeById(int index) {
-        if (index < 0 || index >= tasks.length) return;
+        if (index < 0 || index >= tasks.length) throw  new TaskNotFoundException("Invalid Index");
         // Compact array by shifting elements
         for (int j = index; j < tasks.length - 1; j++) {
             tasks[j] = tasks[j + 1];
@@ -77,14 +81,14 @@ public class TaskRepository implements IRepository<Task> {
      * - Closed for modification
      */
     public Task[] findByProjectId(String projectId) {
-        if (projectId == null) return new Task[0];
+        if (projectId == null) throw new EmptyProjectException("Project ID cannot be null");
         return Arrays.stream(tasks)
                 .filter(t -> t != null && projectId.equals(t.getProjectId()))
                 .toArray(Task[]::new);
     }
 
     public Task findByTaskId(String taskId) {
-        if (taskId == null) return null;
+        if (taskId == null) throw new TaskNotFoundException("Project ID cannot be null");
         return Arrays.stream(tasks)
                 .filter(t -> t != null && taskId.equals(t.getTaskId()))
                 .findFirst()
@@ -92,7 +96,7 @@ public class TaskRepository implements IRepository<Task> {
     }
 
     public Task[] findByAssignedUserId(String userId) {
-        if (userId == null) return new Task[0];
+        if (userId == null) throw new UserNotFoundException("User ID cannot be null");
         return Arrays.stream(tasks)
                 .filter(t -> t != null && userId.equals(t.getAssignedUserId()))
                 .toArray(Task[]::new);

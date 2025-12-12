@@ -74,7 +74,7 @@ public class ProjectController {
                 out.printTitle("Filter by minimum and maximum budget ");
                 double min = in.readNonNegativeDouble("Enter the minimum budget __");
                 double max = in.readNonNegativeDouble("Enter the Maximum budget __");
-                // Would need searchByBudgetRange method
+                out.printMessage(String.format("Budget range entered: %.2f - %.2f (filter not implemented)", min, max));
                 break;
             case 5:
                 // Assign user - would need separate method

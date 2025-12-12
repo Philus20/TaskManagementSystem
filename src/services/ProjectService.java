@@ -4,6 +4,7 @@ package services;
 import Repository.ProjectRepository;
 import interfaces.IProjectService;
 import models.Project;
+import utils.exceptions.EmptyProjectException;
 
 /**
  * ProjectService following SOLID principles:
@@ -15,6 +16,7 @@ public class ProjectService implements IProjectService {
     private final ProjectRepository projectRepository;
 
     public ProjectService( ProjectRepository projectRepository) {
+
         this.projectRepository = projectRepository;
 
     }

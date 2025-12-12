@@ -6,6 +6,7 @@ import Controllers.TaskController;
 import Controllers.UserController;
 import interfaces.IUserService;
 import services.PermissionService;
+import utils.exceptions.InvalidInputExceptions;
 
 /**
  * MenuRouter following Single Responsibility Principle (SRP)
@@ -84,8 +85,7 @@ public class MenuRouter {
                 System.exit(0);
                 break;
             default:
-                printer.printMessage("Invalid choice!");
-                showMainMenu();
+                throw  new InvalidInputExceptions();
         }
     }
 

@@ -2,6 +2,7 @@ package Repository;
 
 import interfaces.IRepository;
 import models.Project;
+import utils.exceptions.*;
 
 import java.util.Arrays;
 
@@ -24,24 +25,29 @@ public class ProjectRepository implements IRepository<Project> {
 
     @Override
     public void add(Project project, int index) {
-        if (project == null) throw new IllegalArgumentException("Project cannot be null");
+        if (project == null) throw new EmptyProjectException("Project cannot be null");
         ensureCapacity(index);
         if (projects[index] != null)
-            throw new IllegalStateException("Project already exists at index " + index);
+            throw new ProjectAlreadyExistException("Project already exists at index " + index);
 
         projects[index] = project;
     }
 
     @Override
     public Project getById(int index) {
-        if (index < 0 || index >= projects.length) return null;
+        if (index < 0 ) throw new IndexIsLessThanZero("Index cannot be less than zero");
+        if ( index >= projects.length) throw new IndexGreatherThanArrayLengthException("The Index is higher than the array Length ");
         return projects[index];
     }
 
     @Override
     public Project[] getAll() {
-        return Arrays.copyOf(projects, projects.length); // safe copy
+        if (projects == null || projects.length == 0) {
+            throw new EmptyProjectException();
+        }
+        return Arrays.copyOf(projects, projects.length);
     }
+
 
     @Override
     public void update(int index, Project project) {
@@ -52,13 +58,13 @@ public class ProjectRepository implements IRepository<Project> {
 
     @Override
     public void removeById(int index) {
-        if (index < 0 || index >= projects.length) return;
+        if (index < 0 || index >= projects.length) throw new IndexIsLessThanZero("Invalid index");
         projects[index] = null;
     }
 
     /** Query helpers */
     public Project[] findByType(String type) {
-        if (type == null) return new Project[0];
+        if (type == null) throw new EntityAttributeException(type);
         return Arrays.stream(projects)
                 .filter(p -> p != null && type.equalsIgnoreCase(p.getType()))
                 .toArray(Project[]::new);

@@ -13,7 +13,6 @@ public class Main {
         UserRepository userRepository = new UserRepository(20);
 
         // Step 2: Create ID generators
-        GenerateProjectId projectIdGenerator = new GenerateProjectId();
         GenerateTaskId taskIdGenerator = new GenerateTaskId();
         GenerateUserId userIdGenerator = new GenerateUserId();
 
