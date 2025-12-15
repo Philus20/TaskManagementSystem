@@ -4,7 +4,6 @@ package services;
 import Repository.ProjectRepository;
 import interfaces.IProjectService;
 import models.Project;
-import utils.exceptions.EmptyProjectException;
 
 /**
  * ProjectService following SOLID principles:
@@ -14,10 +13,14 @@ import utils.exceptions.EmptyProjectException;
 public class ProjectService implements IProjectService {
 
     private final ProjectRepository projectRepository;
+    private final  GenerateProjectId projectIdGenerator;
 
-    public ProjectService( ProjectRepository projectRepository) {
+
+
+    public ProjectService( ProjectRepository projectRepository, GenerateProjectId projectIdGenerator) {
 
         this.projectRepository = projectRepository;
+        this.projectIdGenerator = projectIdGenerator;
 
     }
 
@@ -25,25 +28,43 @@ public class ProjectService implements IProjectService {
 
 
     // Add a project (store in array slot based on ID number)
-    public void addProject(Project project, int index) {
+    public void addProject(Project project) {
+
+        // Generate ID if not set
+        if (project.getId() == null || project.getId().isEmpty()) {
+            String generatedId = projectIdGenerator.generate();
+            project.setId(generatedId);
+        }
+        int index = projectIdGenerator.elementIndex(project.getId());
         projectRepository.add(project,index);
     }
 
     // Get project by id
-    public Project getProjectById(int id) {
-        return (Project) projectRepository.getById(id);
+    public Project getProjectById(String id) {
+      int index =   projectIdGenerator.elementIndex(id);
+        return (Project) projectRepository.getById(index);
     }
 
     public Project [] getAllProjects(){
+
         return projectRepository.getAll();
     }
     //Delete A project by id
-    public void deleteProjectById(int id) {
-        projectRepository.removeById(id);
+    public void deleteProjectById(String id) {
+
+        projectRepository.removeById(projectIdGenerator.elementIndex(id));
     }
 
+    @Override
+    public Project[] filterByType(String type) {
+       return projectRepository.findByType(type);
+    }
 
+    @Override
+    public Project[] findByBudgetRange(double min, double max) {
 
+        return projectRepository.findByBudgetRange(min,max);
+    }
 
 
 //    public  void displayAllProjects() {

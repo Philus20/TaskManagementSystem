@@ -16,8 +16,10 @@ public class Main {
         GenerateTaskId taskIdGenerator = new GenerateTaskId();
         GenerateUserId userIdGenerator = new GenerateUserId();
 
+        GenerateProjectId projectIdGenerator = new GenerateProjectId();
+
         // Step 3: Create services with dependency injection (DIP)
-        ProjectService projectService = new ProjectService(projectRepository);
+        ProjectService projectService = new ProjectService(projectRepository,projectIdGenerator);
         TaskService taskService = new TaskService(taskRepository, taskIdGenerator);
         UserService userService = new UserService(userRepository, userIdGenerator);
         ReportService reportService = new ReportService(taskService, projectService);

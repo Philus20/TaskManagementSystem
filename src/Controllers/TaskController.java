@@ -1,5 +1,6 @@
 package Controllers;
 
+import interfaces.INavigation;
 import interfaces.ITaskService;
 import interfaces.IUserService;
 import models.Task;
@@ -8,9 +9,6 @@ import services.GenerateTaskId;
 import services.PermissionService;
 import utils.Printer;
 import utils.ValidationUtils;
-
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * TaskController following Single Responsibility Principle (SRP)
@@ -24,16 +22,18 @@ public class TaskController {
     private final Printer out;
     private final GenerateTaskId idGenerator;
     private final PermissionService permissionService;
+    private final INavigation navigation;
 
-    public TaskController(ITaskService taskService, IUserService userService, 
-                         ValidationUtils in, Printer out, GenerateTaskId idGenerator,
-                         PermissionService permissionService) {
+    public TaskController(ITaskService taskService, IUserService userService,
+            ValidationUtils in, Printer out, GenerateTaskId idGenerator,
+            PermissionService permissionService, INavigation navigation) {
         this.taskService = taskService;
         this.userService = userService;
         this.in = in;
         this.out = out;
         this.idGenerator = idGenerator;
         this.permissionService = permissionService;
+        this.navigation = navigation;
     }
 
     /**
@@ -47,7 +47,7 @@ public class TaskController {
         out.printTitle("ADD NEW TASK");
         String taskName = in.readNonEmptyText("Enter task name: ");
         String projectId = in.readExistingProjectId("Enter Assigned Project ID (or 0 to cancel): ");
-        
+
         if ("0".equals(projectId)) {
             out.printMessage("Cancelled adding task.");
             return;
@@ -58,28 +58,28 @@ public class TaskController {
         // Display available users
         User[] users = userService.getAllUsers();
         Task task;
-        
+
         if (users == null || users.length == 0) {
             out.printMessage("No users available. Task will be created without assignment.");
             task = new Task(taskName, status, projectId);
             task.setTaskId(idGenerator.generate());
             taskService.addTask(task);
-            out.printMessage(String.format("Task \"%s\" added successfully to project %s (No user assigned)", 
-                taskName, projectId));
+            out.printMessage(String.format("Task \"%s\" added successfully to project %s (No user assigned)",
+                    taskName, projectId));
         } else {
             out.printUsersTable(users);
             String userId = in.readExistingUserId("Enter User ID to assign (or 0 to skip): ");
-            
+
             if ("0".equals(userId)) {
                 task = new Task(taskName, status, projectId);
-                out.printMessage(String.format("Task \"%s\" added successfully to project %s (No user assigned)", 
-                    taskName, projectId));
+                out.printMessage(String.format("Task \"%s\" added successfully to project %s (No user assigned)",
+                        taskName, projectId));
             } else {
                 task = new Task(taskName, status, projectId, userId);
                 User assignedUser = userService.getUserById(userId);
                 out.printMessage(String.format("Task \"%s\" added successfully to project %s", taskName, projectId));
                 out.printMessage(String.format("Assigned User: %s (%s) - %s",
-                    assignedUser.getName(), assignedUser.getEmail(), assignedUser.getRole()));
+                        assignedUser.getName(), assignedUser.getEmail(), assignedUser.getRole()));
             }
             task.setTaskId(idGenerator.generate());
             taskService.addTask(task);
@@ -131,42 +131,50 @@ public class TaskController {
         }
 
         // Convert to list for easier processing
-        List<Task> taskList = Arrays.asList(tasks);
+
         double completionRate = taskService.calculateCompletionRate(projectId);
-        
-        out.printTasksTable(taskList, userService, completionRate);
+
+        out.printTasksTable(tasks, userService, completionRate);
     }
 
     /**
      * Task management menu
      */
     public void taskManagementMenu() {
-        out.printTitle("TASK MANAGEMENT");
-        out.printMessage("1. Add New Task");
-        out.printMessage("2. Update Task Status");
-        out.printMessage("3. Remove Task");
-        out.printMessage("4. View Project Status Report");
-        out.printMessage("5. Back to Main Menu");
+        boolean continueMenu = true;
+        while (continueMenu) {
+            out.printTitle("TASK MANAGEMENT");
+            out.printMessage("1. Add New Task");
+            out.printMessage("2. Update Task Status");
+            out.printMessage("3. Remove Task");
+            out.printMessage("4. View Project Status Report");
+            out.printMessage("5. Back to Main Menu");
 
-        int choice = in.readIntInRange("Enter your choice __", 1, 5);
+            int choice = in.readIntInRange("Enter your choice __", 1, 5);
 
-        switch (choice) {
-            case 1:
-                addTaskInteractive();
-                break;
-            case 2:
-                updateTaskStatus();
-                break;
-            case 3:
-                deleteTask();
-                break;
-            case 4:
-                // This will be handled by ReportController
-                break;
-            case 5:
-                // Return to main menu - handled by MenuRouter
-                break;
+            switch (choice) {
+                case 1:
+                    addTaskInteractive();
+                    out.printMessage("");
+                    break;
+                case 2:
+                    updateTaskStatus();
+                    out.printMessage("");
+                    break;
+                case 3:
+                    deleteTask();
+                    out.printMessage("");
+                    break;
+                case 4:
+                    // Note: Report generation is handled in main menu option 3
+                    out.printMessage("Please use 'View Status Reports' from the main menu to generate reports.");
+                    out.printMessage("");
+                    break;
+                case 5:
+                    continueMenu = false;
+                    navigation.showMainMenu();
+                    break;
+            }
         }
     }
 }
-

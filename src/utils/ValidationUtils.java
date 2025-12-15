@@ -146,7 +146,7 @@ public final class ValidationUtils {
                 System.out.println("Project ID cannot be empty. Please try again.");
                 continue;
             }
-            if (projectService.getProjectById(idGenerator.elementIndex(input)) == null) {
+            if (projectService.getProjectById(input) == null) {
                 System.out.printf("No project found with ID %s. Enter a valid project ID or 0 to return.%n", input);
                 continue;
             }

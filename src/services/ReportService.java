@@ -4,7 +4,6 @@ import interfaces.IReporting;
 import models.Project;
 import models.ProjectStatusReportDto;
 import models.Task;
-import utils.ConsoleMenu; // or just System.out
 
 import java.util.Arrays;
 

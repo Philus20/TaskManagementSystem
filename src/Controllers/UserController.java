@@ -1,5 +1,6 @@
 package Controllers;
 
+import interfaces.INavigation;
 import interfaces.IUserService;
 import models.User;
 import utils.Printer;
@@ -14,11 +15,13 @@ public class UserController {
     private final IUserService userService;
     private final ValidationUtils in;
     private final Printer out;
+    private final INavigation navigation;
 
-    public UserController(IUserService userService, ValidationUtils in, Printer out) {
+    public UserController(IUserService userService, ValidationUtils in, Printer out, INavigation navigation) {
         this.userService = userService;
         this.in = in;
         this.out = out;
+        this.navigation = navigation;
     }
 
     /**
@@ -170,36 +173,41 @@ public class UserController {
      * Switch user menu
      */
     public void switchUserMenu() {
-        out.printTitle("SWITCH USER");
-        out.printMessage("1. Create New User");
-        out.printMessage("2. Login with Existing User");
-        out.printMessage("3. View All Users");
-        out.printMessage("4. Display Current User");
-        out.printMessage("5. Logout");
-        out.printMessage("6. Back to Main Menu");
+        boolean continueMenu = true;
+        while (continueMenu) {
+            out.printTitle("SWITCH USER");
+            out.printMessage("1. Create New User");
+            out.printMessage("2. Login with Existing User");
+            out.printMessage("3. View All Users");
+            out.printMessage("4. Display Current User");
+            out.printMessage("5. Logout");
+            out.printMessage("6. Back to Main Menu");
 
-        int choice = in.readIntInRange("Enter your choice __", 1, 6);
+            int choice = in.readIntInRange("Enter your choice __", 1, 6);
 
-        switch (choice) {
-            case 1:
-                createUser();
-                switchUserMenu();
-                break;
-            case 2:
-                login();
-                break;
-            case 3:
-                displayAllUsers();
-                break;
-            case 4:
-                displayCurrentUser();
-                break;
-            case 5:
-                logout();
-                break;
-            case 6:
-                // Return to main menu - handled by MenuRouter
-                break;
+            switch (choice) {
+                case 1:
+                    createUser();
+                    out.printMessage("");
+                    break;
+                case 2:
+                    login();
+                    out.printMessage("");
+                    break;
+                case 3:
+                    displayAllUsers();
+                    break;
+                case 4:
+                    displayCurrentUser();
+                    break;
+                case 5:
+                    logout();
+                    break;
+                case 6:
+                    continueMenu = false;
+                    navigation.showMainMenu();
+                    break;
+            }
         }
     }
 

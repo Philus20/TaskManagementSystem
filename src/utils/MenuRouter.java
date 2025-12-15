@@ -4,33 +4,35 @@ import Controllers.ProjectController;
 import Controllers.ReportController;
 import Controllers.TaskController;
 import Controllers.UserController;
+import interfaces.INavigation;
 import interfaces.IUserService;
 import services.PermissionService;
-import utils.exceptions.InvalidInputExceptions;
+import utils.exceptions.InvalidInputException;
 
 /**
  * MenuRouter following Single Responsibility Principle (SRP)
  * - Only responsible for menu navigation and routing
  * - Delegates actions to appropriate controllers
+ * - Implements INavigation interface following Dependency Inversion Principle
  */
-public class MenuRouter {
-    private final ProjectController projectController;
-    private final TaskController taskController;
-    private final UserController userController;
-    private final ReportController reportController;
+public class MenuRouter implements INavigation {
+    private ProjectController projectController;
+    private TaskController taskController;
+    private UserController userController;
+    private ReportController reportController;
     private final Printer printer;
     private final ValidationUtils validationUtils;
     private final PermissionService permissionService;
     private final IUserService userService;
 
     public MenuRouter(ProjectController projectController,
-                     TaskController taskController,
-                     UserController userController,
-                     ReportController reportController,
-                     Printer printer,
-                     ValidationUtils validationUtils,
-                     PermissionService permissionService,
-                     IUserService userService) {
+            TaskController taskController,
+            UserController userController,
+            ReportController reportController,
+            Printer printer,
+            ValidationUtils validationUtils,
+            PermissionService permissionService,
+            IUserService userService) {
         this.projectController = projectController;
         this.taskController = taskController;
         this.userController = userController;
@@ -42,50 +44,69 @@ public class MenuRouter {
     }
 
     /**
+     * Initialize controllers (allows setting controllers after MenuRouter creation)
+     * This helps resolve circular dependency during initialization
+     */
+    public void initializeControllers(ProjectController projectController,
+            TaskController taskController,
+            UserController userController,
+            ReportController reportController) {
+        this.projectController = projectController;
+        this.taskController = taskController;
+        this.userController = userController;
+        this.reportController = reportController;
+    }
+
+    /**
      * Display main menu and handle navigation
      */
+    @Override
     public void showMainMenu() {
-        printer.printTitle("JAVA PROJECT MANAGEMENT SYSTEM");
+        boolean continueMenu = true;
+        while (continueMenu) {
+            printer.printTitle("JAVA PROJECT MANAGEMENT SYSTEM");
 
-        // Display current user role if logged in
-        if (permissionService.isLoggedIn()) {
+            // Display current user role if logged in
+            if (permissionService.isLoggedIn()) {
+                printer.printMessage("");
+                userService.getCurrentUser().displayRole();
+                printer.printMessage("");
+            }
+
+            printer.printMessage("1. Manage Projects");
+            printer.printMessage("2. Manage Tasks");
+            printer.printMessage("3. View Status Reports");
+            printer.printMessage("4. Switch User");
+            printer.printMessage("5. Testing");
+            printer.printMessage("6. Exit");
             printer.printMessage("");
-            userService.getCurrentUser().displayRole();
-            printer.printMessage("");
-        }
 
-        printer.printMessage("1. Manage Projects");
-        printer.printMessage("2. Manage Tasks");
-        printer.printMessage("3. View Status Reports");
-        printer.printMessage("4. Switch User");
-        printer.printMessage("5. Testing");
-        printer.printMessage("6. Exit");
-        printer.printMessage("");
+            int choice = validationUtils.readIntInRange("Enter your choice __", 1, 6);
 
-        int choice = validationUtils.readIntInRange("Enter your choice __", 1, 6);
-
-        switch (choice) {
-            case 1:
-                projectController.projectCatalog();
-                break;
-            case 2:
-                taskController.taskManagementMenu();
-                break;
-            case 3:
-                reportController.generateProjectStatusReport();
-                break;
-            case 4:
-                userController.switchUserMenu();
-                break;
-            case 5:
-                showTestingMenu();
-                break;
-            case 6:
-                printer.printMessage("Exiting...");
-                System.exit(0);
-                break;
-            default:
-                throw  new InvalidInputExceptions();
+            switch (choice) {
+                case 1:
+                    projectController.projectCatalog();
+                    break;
+                case 2:
+                    taskController.taskManagementMenu();
+                    break;
+                case 3:
+                    reportController.generateProjectStatusReport();
+                    break;
+                case 4:
+                    userController.switchUserMenu();
+                    break;
+                case 5:
+                    showTestingMenu();
+                    break;
+                case 6:
+                    printer.printMessage("Exiting...");
+                    continueMenu = false;
+                    System.exit(0);
+                    break;
+                default:
+                    throw new InvalidInputException("Invalid menu choice selected.");
+            }
         }
     }
 
@@ -168,7 +189,7 @@ public class MenuRouter {
                     projectController.createProjectInteractive();
                     break;
                 case 2:
-                    // View projects handled by ProjectController
+                    projectController.printAllProjects();
                     break;
                 case 3:
                     taskController.addTaskInteractive();
@@ -200,4 +221,3 @@ public class MenuRouter {
         }
     }
 }
-

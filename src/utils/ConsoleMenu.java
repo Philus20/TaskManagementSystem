@@ -4,13 +4,7 @@ import Controllers.ProjectController;
 import Controllers.ReportController;
 import Controllers.TaskController;
 import Controllers.UserController;
-import services.GenerateProjectId;
-import services.GenerateTaskId;
-import services.PermissionService;
-import services.ProjectService;
-import services.TaskService;
-import services.UserService;
-import services.ReportService;
+import services.*;
 
 import java.util.Scanner;
 
@@ -41,28 +35,30 @@ public class ConsoleMenu {
         PermissionService permissionService = new PermissionService(userService);
 
         // Initialize controllers (following Dependency Inversion Principle)
+        // To resolve circular dependency (controllers need MenuRouter, MenuRouter needs controllers):
+        // 1. Create MenuRouter with null controllers
+        // 2. Create controllers with MenuRouter (which implements INavigation)
+        // 3. Initialize MenuRouter's controllers using initializeControllers method
+
+        // Step 1: Create MenuRouter (controllers will be set later)
+        this.menuRouter = new MenuRouter(null, null, null, null, printer, validationUtils, permissionService, userService);
+
+        // Step 2: Initialize controllers with MenuRouter
         ProjectController projectController = new ProjectController(
-                projectService, validationUtils, printer, projectIdGenerator);
+                projectService, validationUtils, printer, projectIdGenerator, userService, taskService,
+                new ProjectUserAssignmentOperations(projectService, 20), this.menuRouter);
 
         TaskController taskController = new TaskController(
-                taskService, userService, validationUtils, printer, taskIdGenerator, permissionService);
+                taskService, userService, validationUtils, printer, taskIdGenerator, permissionService, this.menuRouter);
 
         UserController userController = new UserController(
-                userService, validationUtils, printer);
+                userService, validationUtils, printer, this.menuRouter);
 
         ReportController reportController = new ReportController(
-                reportService, printer);
+                reportService, printer, this.menuRouter, validationUtils);
 
-        // Initialize menu router
-        this.menuRouter = new MenuRouter(
-                projectController,
-                taskController,
-                userController,
-                reportController,
-                printer,
-                validationUtils,
-                permissionService,
-                userService);
+        // Step 3: Initialize MenuRouter's controllers
+        this.menuRouter.initializeControllers(projectController, taskController, userController, reportController);
     }
 
     /**

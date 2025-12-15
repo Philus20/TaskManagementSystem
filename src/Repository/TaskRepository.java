@@ -3,7 +3,6 @@ package Repository;
 import interfaces.IRepository;
 import models.Task;
 import utils.exceptions.EmptyProjectException;
-import utils.exceptions.EntityAttributeException;
 import utils.exceptions.TaskNotFoundException;
 import utils.exceptions.UserNotFoundException;
 

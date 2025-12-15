@@ -117,7 +117,7 @@ src/services/
 
 ### Utils Package:
 ```
-src/utils/
+src/utils1/
 ├── ConsoleMenu.java           (REFACTORED - now minimal)
 ├── MenuRouter.java            (NEW)
 ├── Printer.java               (ENHANCED)

@@ -1,18 +1,20 @@
 package services;
 
-import interfaces.IRepository;
+import interfaces.IProjectService;
 import models.Project;
 
 import java.util.Arrays;
 
 public class ProjectUserAssignmentOperations {
 
-    private final IRepository<Project> repository;
+    private final IProjectService projectService;
     private String[][] assignments;
+    private  GenerateProjectId projectIdGenerator ;
 
-    public ProjectUserAssignmentOperations(IRepository<Project> repository, int initialCapacity) {
-        this.repository = repository;
+    public ProjectUserAssignmentOperations(IProjectService projectService, int initialCapacity) {
+        this.projectService = projectService;
         this.assignments = new String[initialCapacity][];
+        this.projectIdGenerator = new GenerateProjectId();
     }
 
     private void ensureCapacity(int projectIndex, int teamSize) {
@@ -26,16 +28,16 @@ public class ProjectUserAssignmentOperations {
         }
     }
 
-    public boolean assignUser(int projectId, String userId) {
-        if (projectId < 0 || userId == null) return false;
+    public boolean assignUser(String projectId, String userId) {
+        if (projectId == null || userId == null) return false;
 
-        Project project = repository.getById(projectId);
+        Project project = projectService.getProjectById(projectId);
         if (project == null) return false;
 
         int teamSize = Math.max(1, project.getTeamSize());
-        ensureCapacity(projectId, teamSize);
+        ensureCapacity(projectIdGenerator.elementIndex(projectId), teamSize);
 
-        String[] row = assignments[projectId];
+        String[] row = assignments[projectIdGenerator.elementIndex(projectId)];
         int size = 0;
         while (size < row.length && row[size] != null) size++;
 
@@ -44,13 +46,15 @@ public class ProjectUserAssignmentOperations {
         return true;
     }
 
-    public boolean removeUser(int projectId, String userId) {
-        if (projectId < 0 || userId == null) return false;
+    public boolean removeUser(String projectId, String userId) {
+        if (projectId == null || userId == null) return false;
 
-        Project project = repository.getById(projectId);
-        if (project == null || projectId >= assignments.length || assignments[projectId] == null) return false;
+        int projectIdIndex = projectIdGenerator.elementIndex(projectId);
 
-        String[] row = assignments[projectId];
+        Project project = projectService.getProjectById(projectId);
+        if (project == null || projectIdIndex >= assignments.length || assignments[projectIdIndex] == null) return false;
+
+        String[] row = assignments[projectIdIndex];
         int size = 0;
         while (size < row.length && row[size] != null) size++;
 
@@ -64,13 +68,16 @@ public class ProjectUserAssignmentOperations {
         return false;
     }
 
-    public String[] getAssignedUsers(int projectId) {
-        if (projectId < 0) return new String[0];
+    public String[] getAssignedUsers(String projectId) {
 
-        Project project = repository.getById(projectId);
-        if (project == null || projectId >= assignments.length || assignments[projectId] == null) return new String[0];
+        int index = projectIdGenerator.elementIndex(projectId);
 
-        String[] row = assignments[projectId];
+        if (projectId.isEmpty()) return new String[0];
+
+        Project project = projectService.getProjectById(projectId);
+        if (project == null || index >= assignments.length || assignments[index] == null) return new String[0];
+
+        String[] row = assignments[index];
         int size = 0;
         while (size < row.length && row[size] != null) size++;
 
