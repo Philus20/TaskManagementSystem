@@ -1,46 +1,41 @@
-
-import models.SoftwareProject;
-import models.Task;
-import models.HardwareProject;
-import services.ProjectService;
-import services.ReportService;
-import services.TaskService;
-import services.UserService;
+import Repository.ProjectRepository;
+import Repository.TaskRepository;
+import Repository.UserRepository;
+import services.*;
 import utils.ConsoleMenu;
 
 public class Main {
     public static void main(String[] args) {
-        ProjectService projectService = new ProjectService();
-        TaskService taskService = new TaskService();
-        ReportService reportService = new ReportService(projectService, taskService);
-        UserService userService = new UserService();
 
-        ConsoleMenu.setProjectService(projectService);
+        // Step 1: Create repositories (following Dependency Inversion Principle)
+        ProjectRepository projectRepository = new ProjectRepository(20);
+        TaskRepository taskRepository = new TaskRepository(50);
+        UserRepository userRepository = new UserRepository(20);
 
-        ConsoleMenu.setTaskService(taskService);
+        // Step 2: Create ID generators
+        GenerateTaskId taskIdGenerator = new GenerateTaskId();
+        GenerateUserId userIdGenerator = new GenerateUserId();
 
-        ConsoleMenu.setReportService(reportService);
+        GenerateProjectId projectIdGenerator = new GenerateProjectId();
 
-        ConsoleMenu.setUserService(userService);
-        //
-        SoftwareProject sp1 = new SoftwareProject( "AI System", "Build an AI model", "Software", 5, "Java",
-                1500);
-        HardwareProject hp1 = new HardwareProject( "IoT Device", "Create a smart sensor", "Hardware", 3,
-                "Microcontroller", 1500);
-Task t1 = new Task("Task 1",  "Completed", "P001");
-Task t2 = new Task("Task 2", "Pending", "P002");
+        // Step 3: Create services with dependency injection (DIP)
+        ProjectService projectService = new ProjectService(projectRepository,projectIdGenerator);
+        TaskService taskService = new TaskService(taskRepository, taskIdGenerator);
+        UserService userService = new UserService(userRepository, userIdGenerator);
+        ReportService reportService = new ReportService(taskService, projectService);
 
-        projectService.addProject(sp1);
-        projectService.addProject(hp1);
+        // Step 4: Create console menu (it internally creates all controllers and router)
+        ConsoleMenu consoleMenu = new ConsoleMenu(
+                projectService,
+                taskService,
+                reportService,
+                userService
+        );
 
-        taskService.addTask(t1);
-        taskService.addTask(t2);
+        // Step 5: Start the application
+        consoleMenu.start();
 
-        // Start with initial login menu
-        ConsoleMenu.initialLoginMenu();
-       
-
-        // Display detailed info for one project
-
+        // Optional: close scanner at the end
+        consoleMenu.closeScanner();
     }
 }

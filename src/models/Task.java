@@ -1,30 +1,30 @@
 package models;
 
 public class Task {
-    private String taskName ;
+    private String taskName;
     private String taskId;
     private String taskStatus;
     private String projectId;
     private String assignedUserId;
-    private static int idCounter = 1;
 
-
-    public Task(String aTaskname, String aTaskStatus, String aProjectId)
-    {
-        this.taskName = aTaskname;
-        this.taskId =  "T" + String.format("%04d", idCounter++);;
-        this.taskStatus = aTaskStatus;
-        this.projectId = aProjectId;
+    /**
+     * Constructor - ID should be set by service layer using IdGenerator
+     * Following Dependency Inversion Principle
+     */
+    public Task(String taskName, String taskStatus, String projectId) {
+        this.taskName = taskName;
+        this.taskStatus = taskStatus;
+        this.projectId = projectId;
         this.assignedUserId = null;
+        // ID will be set by service layer
     }
 
-    public Task(String aTaskname, String aTaskStatus, String aProjectId, String assignedUserId)
-    {
-        this.taskName = aTaskname;
-        this.taskId =  "T" + String.format("%04d", idCounter++);;
-        this.taskStatus = aTaskStatus;
-        this.projectId = aProjectId;
+    public Task(String taskName, String taskStatus, String projectId, String assignedUserId) {
+        this.taskName = taskName;
+        this.taskStatus = taskStatus;
+        this.projectId = projectId;
         this.assignedUserId = assignedUserId;
+        // ID will be set by service layer
     }
     public void setTaskStatus (String status){
         taskStatus=status;
@@ -34,6 +34,10 @@ public class Task {
     }
     public String getTaskId() {
         return taskId;
+    }
+
+    public void setTaskId(String taskId) {
+        this.taskId = taskId;
     }
     public String getTaskStatus() {
         return taskStatus;
