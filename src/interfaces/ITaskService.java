@@ -14,6 +14,5 @@ public interface ITaskService {
     void deleteTask(String taskId);
     Task[] getTasksByProjectId(String projectId);
     double calculateCompletionRate(String projectId);
-    Task[] getTasksByAssignedUserId(String userId);
 }
 

@@ -94,7 +94,8 @@ public class TaskService implements ITaskService {
         try {
             task = getTaskById(taskId);
             if (task != null) {
-                task.setTaskStatus(taskStatus);
+                if(taskStatus == "Completed")taskRepository.markAsComplete(task);
+               else task.setTaskStatus(taskStatus);
                 // Update in repository
                 int index = taskIdGenerator.elementIndex(taskId);
                 taskRepository.update(index, task);

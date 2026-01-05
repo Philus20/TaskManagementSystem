@@ -1,5 +1,6 @@
 package Repository;
 
+import interfaces.Completable;
 import interfaces.IRepository;
 import models.Task;
 import utils.exceptions.EmptyProjectException;
@@ -13,7 +14,7 @@ import java.util.Arrays;
  * - Only responsible for Task data persistence
  * - Implements IRepository for Dependency Inversion (DIP)
  */
-public class TaskRepository implements IRepository<Task> {
+public class TaskRepository implements IRepository<Task>, Completable {
 
     private Task[] tasks;
 
@@ -43,6 +44,8 @@ public class TaskRepository implements IRepository<Task> {
     @Override
     public Task getById(int index) {
         if (index < 0 || index >= tasks.length) return null;
+        if(tasks[index]==null) throw  new TaskNotFoundException("Task does not exist");
+
         return tasks[index];
     }
 
@@ -61,14 +64,19 @@ public class TaskRepository implements IRepository<Task> {
     public void update(int index, Task task) {
         if (index < 0) throw new TaskNotFoundException("Invalid Index");
         ensureCapacity(index);
+        if(tasks[index]==null) throw  new TaskNotFoundException("Task does not exist");
+
         tasks[index] = task;
     }
 
     @Override
     public void removeById(int index) {
         if (index < 0 || index >= tasks.length) throw  new TaskNotFoundException("Invalid Index");
+
+
         // Compact array by shifting elements
         for (int j = index; j < tasks.length - 1; j++) {
+            if(tasks[j]==null) throw  new TaskNotFoundException("Task does not exist");
             tasks[j] = tasks[j + 1];
         }
         tasks[tasks.length - 1] = null;
@@ -99,5 +107,12 @@ public class TaskRepository implements IRepository<Task> {
         return Arrays.stream(tasks)
                 .filter(t -> t != null && userId.equals(t.getAssignedUserId()))
                 .toArray(Task[]::new);
+    }
+
+    @Override
+    public void markAsComplete(Task task) {
+
+        task.setTaskStatus("Completed");
+
     }
 }
