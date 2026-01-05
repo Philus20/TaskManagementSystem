@@ -430,6 +430,15 @@ For issues or questions:
 
 ---
 
+
+## Git set up 
+- **Repository**: [GitHub - Task Management System]
+- Clone the repository:
+  ```bash
+  git clone
+  ```
+  
+
 **Version**: 1.0  
 **Last Updated**: 2024
 
