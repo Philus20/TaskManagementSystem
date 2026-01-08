@@ -25,8 +25,8 @@ public class TaskController {
     private final INavigation navigation;
 
     public TaskController(ITaskService taskService, IUserService userService,
-            ValidationUtils in, Printer out, GenerateTaskId idGenerator,
-            PermissionService permissionService, INavigation navigation) {
+                          ValidationUtils in, Printer out, GenerateTaskId idGenerator,
+                          PermissionService permissionService, INavigation navigation) {
         this.taskService = taskService;
         this.userService = userService;
         this.in = in;

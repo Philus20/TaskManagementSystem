@@ -41,7 +41,7 @@ public class ProjectService implements IProjectService {
 
     // Get project by id
     public Project getProjectById(String id) {
-      int index =   projectIdGenerator.elementIndex(id);
+        int index =   projectIdGenerator.elementIndex(id);
         return (Project) projectRepository.getById(index);
     }
 
@@ -57,7 +57,7 @@ public class ProjectService implements IProjectService {
 
     @Override
     public Project[] filterByType(String type) {
-       return projectRepository.findByType(type);
+        return projectRepository.findByType(type);
     }
 
     @Override

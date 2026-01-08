@@ -1,7 +1,16 @@
+package Tests;
 
+import Repository.ProjectRepository;
+import models.HardwareProject;
+import models.Project;
+import models.SoftwareProject;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-
+import services.GenerateProjectId;
 import services.ProjectService;
+import utils.exceptions.EmptyProjectException;
+
 
 import static org.junit.jupiter.api.Assertions.*;
 

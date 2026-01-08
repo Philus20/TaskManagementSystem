@@ -1,5 +1,3 @@
-package  src;
-
 import Repository.ProjectRepository;
 import Repository.TaskRepository;
 import Repository.UserRepository;
@@ -13,6 +11,7 @@ public class Main {
         ProjectRepository projectRepository = new ProjectRepository(20);
         TaskRepository taskRepository = new TaskRepository(50);
         UserRepository userRepository = new UserRepository(20);
+
         // Step 2: Create ID generators
         GenerateTaskId taskIdGenerator = new GenerateTaskId();
         GenerateUserId userIdGenerator = new GenerateUserId();
