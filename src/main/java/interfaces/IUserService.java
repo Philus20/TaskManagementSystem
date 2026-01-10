@@ -2,6 +2,8 @@ package interfaces;
 
 import models.User;
 
+import java.util.List;
+
 /**
  * UserService interface following Dependency Inversion Principle (DIP)
  * High-level modules should depend on abstractions, not concretions
@@ -12,9 +14,9 @@ public interface IUserService {
     User login(String userId);
     void logout();
     User getCurrentUser();
-    User[] getAllUsers();
+    List<User> getAllUsers();
     User getUserById(String userId);
-    User[] getUsersByRole(String role);
+    List<User>getUsersByRole(String role);
     void displayCurrentUser();
 }
 

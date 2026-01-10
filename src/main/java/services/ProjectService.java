@@ -4,6 +4,10 @@ package services;
 import Repository.ProjectRepository;
 import interfaces.IProjectService;
 import models.Project;
+import models.User;
+
+import java.util.List;
+import java.util.function.Predicate;
 
 /**
  * ProjectService following SOLID principles:
@@ -35,33 +39,33 @@ public class ProjectService implements IProjectService {
             String generatedId = projectIdGenerator.generate();
             project.setId(generatedId);
         }
-        int index = projectIdGenerator.elementIndex(project.getId());
-        projectRepository.add(project,index);
+
+        projectRepository.add(project, project.getId());
     }
 
     // Get project by id
     public Project getProjectById(String id) {
-        int index =   projectIdGenerator.elementIndex(id);
-        return (Project) projectRepository.getById(index);
+      //  int index =   projectIdGenerator.elementIndex(id);
+        return (Project) projectRepository.getById(id);
     }
 
-    public Project [] getAllProjects(){
+    public List<Project> getAllProjects(){
 
         return projectRepository.getAll();
     }
     //Delete A project by id
     public void deleteProjectById(String id) {
 
-        projectRepository.removeById(projectIdGenerator.elementIndex(id));
+        projectRepository.removeById(id);
     }
 
     @Override
-    public Project[] filterByType(String type) {
+    public List<Project> filterByType(String type) {
         return projectRepository.findByType(type);
     }
 
     @Override
-    public Project[] findByBudgetRange(double min, double max) {
+    public List<Project> findByBudgetRange(double min, double max) {
 
         return projectRepository.findByBudgetRange(min,max);
     }

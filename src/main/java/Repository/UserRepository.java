@@ -2,9 +2,13 @@ package Repository;
 
 import interfaces.IRepository;
 import models.User;
+import services.GenerateUserId;
 import utils.exceptions.UserNotFoundException;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * UserRepository following Single Responsibility Principle (SRP)
@@ -13,59 +17,59 @@ import java.util.Arrays;
  */
 public class UserRepository implements IRepository<User> {
 
-    private User[] users;
+    private List<User> users ;
+    GenerateUserId userIdGenerator;
 
-    public UserRepository(int initialCapacity) {
-        if (initialCapacity <= 0) initialCapacity = 20;
-        this.users = new User[initialCapacity];
+
+    public UserRepository() {
+        this.users = new ArrayList<>();
+       userIdGenerator = new GenerateUserId();
     }
 
-    private void ensureCapacity(int index) {
-        if (index < users.length) return;
 
-        int newCapacity = Math.max(users.length * 2, 1);
-        while (newCapacity <= index) newCapacity *= 2;
-        users = Arrays.copyOf(users, newCapacity);
-    }
 
     @Override
-    public void add(User user, int index) {
+    public void add(User user, String index) {
         if (user == null) throw new UserNotFoundException("User cannot be null");
-        ensureCapacity(index);
-        if (users[index] != null)
+
+        int idx = this.userIdGenerator.elementIndex(index);
+        if (idx < 0 ) throw new UserNotFoundException("Invalid index: " + index);
+
+        if (users.contains(user)) {
             throw new UserNotFoundException("User already exists at index " + index);
+        }
 
-        users[index] = user;
+        users.add(idx, user);
+    }
+
+
+    @Override
+    public User getById(String index) {
+        int idx = this.userIdGenerator.elementIndex(index);
+        if (idx < 0 || idx >= users.size()) throw new UserNotFoundException("Invalid index");
+        return users.get(idx);
     }
 
     @Override
-    public User getById(int index) {
-        if (index < 0 || index >= users.length) throw new UserNotFoundException("Invalid index");
-        return users[index];
+    public List<User> getAll() {
+        ;
+        return users;
     }
 
     @Override
-    public User[] getAll() {
-        // Return trimmed array (no null slots)
-        int count = 0;
-        for (User u : users) if (u != null) count++;
-        User[] result = new User[count];
-        int i = 0;
-        for (User u : users) if (u != null) result[i++] = u;
-        return result;
+    public void update(String index, User user) {
+        int idx = this.userIdGenerator.elementIndex(index);
+
+        if (idx < 0) throw new UserNotFoundException("Invalid index");
+        users.add(idx,user);
     }
 
     @Override
-    public void update(int index, User user) {
-        if (index < 0) throw new UserNotFoundException("Invalid index");
-        ensureCapacity(index);
-        users[index] = user;
-    }
+    public void removeById(String index) {
+        int idx = this.userIdGenerator.elementIndex(index);
 
-    @Override
-    public void removeById(int index) {
-        if (index < 0 || index >= users.length) return;
-        users[index] = null;
+        if (idx < 0 || idx >= users.size()) return;
+        users.remove(idx);
     }
 
     /**
@@ -73,16 +77,15 @@ public class UserRepository implements IRepository<User> {
      */
     public User findByUserId(String userId) {
         if (userId == null) throw new UserNotFoundException("userId cannot be null");
-        return Arrays.stream(users)
+        return users.stream()
                 .filter(u -> u != null && userId.equals(u.getId()))
                 .findFirst()
                 .orElse(null);
     }
 
-    public User[] findByRole(String role) {
-        if (role == null) return new User[0];
-        return Arrays.stream(users)
-                .filter(u -> u != null && role.equalsIgnoreCase(u.getRole()))
-                .toArray(User[]::new);
+    public List<User> findByRole(String role) {
+        if (role == null) throw new UserNotFoundException("No user with such role exist");
+        return users.stream()
+                .filter(u -> u != null && role.equalsIgnoreCase(u.getRole())).toList();
     }
 }

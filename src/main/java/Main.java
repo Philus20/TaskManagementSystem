@@ -8,9 +8,9 @@ public class Main {
     public static void main(String[] args) {
 
         // Step 1: Create repositories (following Dependency Inversion Principle)
-        ProjectRepository projectRepository = new ProjectRepository(20);
-        TaskRepository taskRepository = new TaskRepository(50);
-        UserRepository userRepository = new UserRepository(20);
+        ProjectRepository projectRepository = new ProjectRepository();
+        TaskRepository taskRepository = new TaskRepository();
+        UserRepository userRepository = new UserRepository();
 
         // Step 2: Create ID generators
         GenerateTaskId taskIdGenerator = new GenerateTaskId();

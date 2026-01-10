@@ -2,9 +2,12 @@ package Controllers;
 
 import interfaces.INavigation;
 import interfaces.IUserService;
+import models.Task;
 import models.User;
 import utils.Printer;
 import utils.ValidationUtils;
+
+import java.util.List;
 
 /**
  * UserController following Single Responsibility Principle (SRP)
@@ -77,8 +80,8 @@ public class UserController {
         out.printTitle("LOGIN");
 
         // Show available users if any exist
-        User[] users = userService.getAllUsers();
-        if (users != null && users.length > 0) {
+        List<User> users = userService.getAllUsers();
+        if (!users.isEmpty()) {
             out.printUsersTable(users);
         }
 
@@ -141,9 +144,9 @@ public class UserController {
      */
     public void displayAllUsers() {
         out.printTitle("ALL USERS");
-        User[] users = userService.getAllUsers();
+        List<User> users = userService.getAllUsers();
 
-        if (users == null || users.length == 0) {
+        if (users.isEmpty()) {
             out.printMessage("No users found.");
         } else {
             out.printUsersTable(users);

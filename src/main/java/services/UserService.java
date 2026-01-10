@@ -7,6 +7,9 @@ import models.User;
 import models.RegularUser;
 import models.AdminUser;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * UserService following SOLID principles:
  * - Single Responsibility: Manages user business logic only
@@ -37,10 +40,11 @@ public class UserService implements IUserService {
         RegularUser user = new RegularUser(name, email);
         // Set generated ID
         String generatedId = userIdGenerator.generate();
+        System.out.println(generatedId + "id");
         user.setId(generatedId);
 
         int index = userIdGenerator.elementIndex(generatedId);
-        userRepository.add(user, index);
+        userRepository.add(user, generatedId);
         return user;
     }
 
@@ -57,8 +61,7 @@ public class UserService implements IUserService {
         String generatedId = userIdGenerator.generate();
         user.setId(generatedId);
 
-        int index = userIdGenerator.elementIndex(generatedId);
-        userRepository.add(user, index);
+        userRepository.add(user, user.getId());
         return user;
     }
 
@@ -92,7 +95,8 @@ public class UserService implements IUserService {
     /**
      * Get all users
      */
-    public User[] getAllUsers() {
+
+    public List<User> getAllUsers() {
         return userRepository.getAll();
     }
 
@@ -107,8 +111,8 @@ public class UserService implements IUserService {
     /**
      * Get users by role
      */
-    public User[] getUsersByRole(String role) {
-        if (role == null) return new User[0];
+    public List<User> getUsersByRole(String role) {
+        if (role == null) return new ArrayList<>();
         return userRepository.findByRole(role);
     }
 

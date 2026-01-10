@@ -10,6 +10,8 @@ import services.PermissionService;
 import utils.Printer;
 import utils.ValidationUtils;
 
+import java.util.List;
+
 /**
  * TaskController following Single Responsibility Principle (SRP)
  * - Only responsible for task-related user interactions
@@ -56,10 +58,10 @@ public class TaskController {
         String status = in.readValidTaskStatus("Enter Task Status (Pending, In Progress, Completed): ");
 
         // Display available users
-        User[] users = userService.getAllUsers();
+        List<User> users = userService.getAllUsers();
         Task task;
 
-        if (users == null || users.length == 0) {
+        if (users == null || users.isEmpty()) {
             out.printMessage("No users available. Task will be created without assignment.");
             task = new Task(taskName, status, projectId);
             task.setTaskId(idGenerator.generate());
@@ -124,8 +126,8 @@ public class TaskController {
      * Display tasks for a project
      */
     public void displayTasksForProject(String projectId) {
-        Task[] tasks = taskService.getTasksByProjectId(projectId);
-        if (tasks == null || tasks.length == 0) {
+        List<Task> tasks = taskService.getTasksByProjectId(projectId);
+        if (tasks.isEmpty()) {
             out.printMessage("No tasks found.");
             return;
         }

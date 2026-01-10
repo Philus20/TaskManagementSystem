@@ -2,97 +2,88 @@ package Repository;
 
 import interfaces.IRepository;
 import models.Project;
+import models.User;
 import utils.exceptions.*;
 
-import java.util.Arrays;
+import java.util.*;
 
 public class ProjectRepository implements IRepository<Project> {
 
-    private Project[] projects;
+    private Map<String,Project> projects ;
 
-    public ProjectRepository(int initialCapacity) {
-        if (initialCapacity <= 0) initialCapacity = 10;
-        this.projects = new Project[initialCapacity];
+    public ProjectRepository() {
+        this.projects = new HashMap<>();
     }
 
-    private void ensureCapacity(int index) {
-        if (index < projects.length) return;
 
-        int newCapacity = Math.max(projects.length * 2, 1);
-        while (newCapacity <= index) newCapacity *= 2;
-        projects = Arrays.copyOf(projects, newCapacity);
+
+    @Override
+    public void add(Project project, String key) {
+        if (this.projects.isEmpty()) throw new EmptyProjectException("Project cannot be null");
+
+        if (projects.containsKey(key))
+            throw new ProjectAlreadyExistException("Project already exists for this Name " + key);
+
+        projects.put(key, project);
+//        System.out.println(project.getType());
     }
 
     @Override
-    public void add(Project project, int index) {
-        if (project == null) throw new EmptyProjectException("Project cannot be null");
-        ensureCapacity(index);
-        if (projects[index] != null)
-            throw new ProjectAlreadyExistException("Project already exists at index " + index);
+    public Project getById(String key) {
+        if (key == null || key.isBlank()) {
+            throw new IllegalArgumentException("Project ID cannot be null or empty");
+        }
 
-        projects[index] = project;
-        System.out.println(project.getType());
-    }
-
-    @Override
-    public Project getById(int index) {
-        if (index < 0 ) throw new IndexIsLessThanZero("Index cannot be less than zero");
-        if ( index >= projects.length) throw new IndexGreatherThanArrayLengthException("The Index is higher than the array Length ");
-        if(projects[index]==null)
+        Project project = projects.get(key);
+        if (project == null) {
             throw new EmptyProjectException("No Project Found for this Id");
-        return projects[index];
-    }
-
-    @Override
-    public Project[] getAll() {
-
-        boolean found = false;
-
-        for (Project p : projects) {
-            if (p != null) {
-                found = true;
-                break;
-            }
         }
 
-        if (!found) {
-            throw new EmptyProjectException();
+        return project;
+    }
+
+
+
+    @Override
+    public List<Project> getAll() {
+        if (projects == null || projects.isEmpty()) {
+            throw new EmptyProjectException("No Projects Found");
         }
-
-        return Arrays.copyOf(projects, projects.length);
+        // Return a snapshot so callers can't mutate the backing map via the view
+        return new ArrayList<>(projects.values());
     }
 
 
 
+
+
+
     @Override
-    public void update(int index, Project project) {
-        if (index < 0) throw new IllegalArgumentException("Invalid index");
-        ensureCapacity(index);
+    public void update(String index, Project project) {
         Project temp = getById(index);
-        projects[index] = project;
+        projects.put(project.getId(),project) ;
     }
 
     @Override
-    public void removeById(int index) {
-        if (index < 0 || index >= projects.length) throw new IndexIsLessThanZero("Invalid index");
-        Project temp = getById(index);
+    public void removeById(String Id) {
+        Project temp = getById(Id);
 
-        projects[index] = null;
+        projects.remove(temp.getId()) ;
     }
 
     /** Query helpers */
-    public Project[] findByType(String type) {
+    public List<Project> findByType(String type) {
         if (type == null) throw new EntityAttributeException(type);
-        Project[] projects = getAll();
-        return Arrays.stream(projects)
+      List<Project> projects = getAll();
+        return projects.stream()
                 .filter(p -> p != null && type.equalsIgnoreCase(p.getType()))
-                .toArray(Project[]::new);
+                .toList();
     }
 
-    public Project[] findByBudgetRange(double min, double max) {
-        Project[] projects = getAll();
-        return Arrays.stream(projects)
+    public List<Project> findByBudgetRange(double min, double max) {
+      List<Project> projects = getAll();
+        return projects.stream()
                 .filter(p -> p != null && p.getBudget() >= min && p.getBudget() <= max)
-                .toArray(Project[]::new);
+                .toList();
     }
 }

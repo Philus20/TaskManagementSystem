@@ -6,6 +6,8 @@ import models.Task;
 import models.User;
 import services.ProjectUserAssignmentOperations;
 
+import java.util.List;
+
 /**
  * Printer following Single Responsibility Principle (SRP)
  * - Only responsible for all output/display operations
@@ -23,8 +25,8 @@ public class Printer {
         System.out.println(msg);
     }
 
-    public void printProjectsTable(Project[] projects) {
-        if (projects == null || projects.length == 0) {
+    public void printProjectsTable(List<Project> projects) {
+        if (projects == null || projects.isEmpty() ) {
             System.out.println("No projects");
             return;
         }
@@ -39,8 +41,8 @@ public class Printer {
         System.out.println("--------------------------------------------------------------------------------");
     }
 
-    public void printUsersTable(User[] users) {
-        if (users == null || users.length == 0) {
+    public void printUsersTable(List<User> users) {
+        if (users == null || users.isEmpty()) {
             System.out.println("No users found.");
             return;
         }
@@ -55,8 +57,8 @@ public class Printer {
         System.out.println("--------------------------------------------------------------------------------");
     }
 
-    public void printTasksTable(Task[] tasks, IUserService userService, double completionRate) {
-        if (tasks == null || tasks.length == 0) {
+    public void printTasksTable(List<Task> tasks, IUserService userService, double completionRate) {
+        if (tasks.isEmpty()) {
             System.out.println("No Task found.");
             return;
         }
@@ -96,10 +98,10 @@ public class Printer {
             interfaces.ITaskService taskService,
             interfaces.IUserService userService, ProjectUserAssignmentOperations projectUserAssignmentOperations) {
         Project project = projectService.getProjectById(id);
-        Task[] tasks = taskService.getTasksByProjectId(id);
+        List<Task> tasks = taskService.getTasksByProjectId(id);
         if (project == null) {
             System.out.println("Project not found.");
-        } else if (tasks == null || tasks.length == 0) {
+        } else if (tasks.isEmpty()) {
             displayProjectDetailsHelper(project, tasks);
             ;
             System.out.println("No tasks found.");
@@ -133,7 +135,7 @@ public class Printer {
     }
 
     private void displayProjectDetailsHelper(
-            Project project, Task[] tasks) {
+            Project project, List<Task> tasks) {
         printTitle("PROJECT DETAILS : " + project.getId());
         System.out.println("Project Name: " + project.getName());
         System.out.println("Project Type: " + project.getType());

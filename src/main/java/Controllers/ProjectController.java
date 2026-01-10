@@ -14,6 +14,8 @@ import services.ProjectUserAssignmentOperations;
 import utils.Printer;
 import utils.ValidationUtils;
 
+import java.util.List;
+
 public class ProjectController {
 
     private final ProjectService projectService;
@@ -176,8 +178,8 @@ public class ProjectController {
             out.printMessage("Cancelled.");
             return; // Return to catalog menu
         } else {
-            User[] users = userService.getAllUsers();
-            if (users == null || users.length == 0) {
+            List<User> users = userService.getAllUsers();
+            if (users.isEmpty()) {
                 out.printMessage("No users available. Please create a user first.");
                 return; // Return to catalog menu
             } else {

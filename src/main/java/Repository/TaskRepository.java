@@ -3,11 +3,14 @@ package Repository;
 import interfaces.Completable;
 import interfaces.IRepository;
 import models.Task;
+import services.GenerateTaskId;
 import utils.exceptions.EmptyProjectException;
 import utils.exceptions.TaskNotFoundException;
 import utils.exceptions.UserNotFoundException;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * TaskRepository following Single Responsibility Principle (SRP)
@@ -16,70 +19,61 @@ import java.util.Arrays;
  */
 public class TaskRepository implements IRepository<Task>, Completable {
 
-    private Task[] tasks;
+    List<Task> tasks;
+    GenerateTaskId taskIdGenerator;
 
-    public TaskRepository(int initialCapacity) {
-        if (initialCapacity <= 0) initialCapacity = 50;
-        this.tasks = new Task[initialCapacity];
+    public TaskRepository() {
+        this.taskIdGenerator = new GenerateTaskId();
+        this.tasks = new ArrayList<>() ;
+
     }
 
-    private void ensureCapacity(int index) {
-        if (index < tasks.length) return;
 
-        int newCapacity = Math.max(tasks.length * 2, 1);
-        while (newCapacity <= index) newCapacity *= 2;
-        tasks = Arrays.copyOf(tasks, newCapacity);
-    }
 
     @Override
-    public void add(Task task, int index) {
+    public void add(Task task, String index) {
         if (task == null) throw new TaskNotFoundException("Task cannot be null");
-        ensureCapacity(index);
-        if (tasks[index] != null)
+        int idx = this.taskIdGenerator.elementIndex(index);
+        if (this.tasks.contains(task))
             throw new TaskNotFoundException("Task already exists at index " + index);
 
-        tasks[index] = task;
+        this.tasks.add(idx, task);
     }
 
     @Override
-    public Task getById(int index) {
-        if (index < 0 || index >= tasks.length) return null;
-        if(tasks[index]==null) throw  new TaskNotFoundException("Task does not exist");
+    public Task getById(String index) {
+        int idx = taskIdGenerator.elementIndex(index);
 
-        return tasks[index];
-    }
-
-    @Override
-    public Task[] getAll() {
-        // Return trimmed array (no null slots)
-        int count = 0;
-        for (Task t : tasks) if (t != null) count++;
-        Task[] result = new Task[count];
-        int i = 0;
-        for (Task t : tasks) if (t != null) result[i++] = t;
-        return result;
-    }
-
-    @Override
-    public void update(int index, Task task) {
-        if (index < 0) throw new TaskNotFoundException("Invalid Index");
-        ensureCapacity(index);
-        if(tasks[index]==null) throw  new TaskNotFoundException("Task does not exist");
-
-        tasks[index] = task;
-    }
-
-    @Override
-    public void removeById(int index) {
-        if (index < 0 || index >= tasks.length) throw  new TaskNotFoundException("Invalid Index");
-
-
-        // Compact array by shifting elements
-        for (int j = index; j < tasks.length - 1; j++) {
-            if(tasks[j]==null) throw  new TaskNotFoundException("Task does not exist");
-            tasks[j] = tasks[j + 1];
+        if (idx < 0 || idx >= tasks.size()) {
+            throw new TaskNotFoundException("No task exists for index: " + index);
         }
-        tasks[tasks.length - 1] = null;
+
+        Task task = tasks.get(idx);
+        if (task == null) {
+            throw new TaskNotFoundException("Task at index " + index + " is null");
+        }
+
+        return task;
+    }
+
+
+    @Override
+    public List<Task> getAll() {
+
+        return tasks;
+    }
+
+    @Override
+    public void update(String index, Task task) {
+        int idx = parseAndValidateIndex(index);
+        tasks.set(idx, task);
+    }
+
+
+    @Override
+    public void removeById(String index) {
+        int idx = parseAndValidateIndex(index);
+        this.tasks.remove(idx);
     }
 
     /**
@@ -87,26 +81,26 @@ public class TaskRepository implements IRepository<Task>, Completable {
      * - Open for extension (can add more query methods)
      * - Closed for modification
      */
-    public Task[] findByProjectId(String projectId) {
+    public List<Task> findByProjectId(String projectId) {
         if (projectId == null) throw new EmptyProjectException("Project ID cannot be null");
-        return Arrays.stream(tasks)
+        return tasks.stream()
                 .filter(t -> t != null && projectId.equals(t.getProjectId()))
-                .toArray(Task[]::new);
+                .toList();
     }
 
     public Task findByTaskId(String taskId) {
         if (taskId == null) throw new TaskNotFoundException("Project ID cannot be null");
-        return Arrays.stream(tasks)
+        return tasks.stream()
                 .filter(t -> t != null && taskId.equals(t.getTaskId()))
                 .findFirst()
                 .orElse(null);
     }
 
-    public Task[] findByAssignedUserId(String userId) {
+    public List<Task> findByAssignedUserId(String userId) {
         if (userId == null) throw new UserNotFoundException("User ID cannot be null");
-        return Arrays.stream(tasks)
+        return tasks.stream()
                 .filter(t -> t != null && userId.equals(t.getAssignedUserId()))
-                .toArray(Task[]::new);
+        .toList();
     }
 
     @Override
@@ -114,5 +108,12 @@ public class TaskRepository implements IRepository<Task>, Completable {
 
         task.setTaskStatus("Completed");
 
+    }
+
+    private int parseAndValidateIndex(String index){
+        int idxToNumber = this.taskIdGenerator.elementIndex(index);
+        if (idxToNumber < 0 || idxToNumber > tasks.size()) throw new TaskNotFoundException("Invalid Index");
+
+        return idxToNumber;
     }
 }

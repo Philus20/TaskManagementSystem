@@ -1,4 +1,3 @@
-package Tests;
 
 import Repository.ProjectRepository;
 import models.HardwareProject;
@@ -11,6 +10,8 @@ import services.GenerateProjectId;
 import services.ProjectService;
 import utils.exceptions.EmptyProjectException;
 
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -36,7 +37,7 @@ class ProjectServiceTest {
         @BeforeEach
         void setUp() {
             // Initialize fresh dependencies for each test
-            projectRepository = new ProjectRepository(20);
+            projectRepository = new ProjectRepository();
             projectIdGenerator = new GenerateProjectId();
             projectService = new ProjectService(projectRepository, projectIdGenerator);
         }
@@ -162,11 +163,11 @@ class ProjectServiceTest {
             projectService.addProject(project3);
 
             // When: Getting all projects
-            Project[] projects = projectService.getAllProjects();
+           List<Project> projects = projectService.getAllProjects();
 
             // Then: Should return all projects
             assertNotNull(projects, "Projects array should not be null");
-            assertTrue(projects.length >= 3, "Should return at least 3 projects");
+            assertTrue(projects.size() >= 3, "Should return at least 3 projects");
         }
 
         /**
@@ -229,11 +230,11 @@ class ProjectServiceTest {
             projectService.addProject(hardware1);
 
             // When: Filtering by Software type
-            Project[] softwareProjects = projectService.filterByType("Software");
+           List<Project> softwareProjects = projectService.filterByType("Software");
 
             // Then: Should return only Software projects
             assertNotNull(softwareProjects, "Filtered projects should not be null");
-            assertEquals(2, softwareProjects.length, "Should return 2 Software projects");
+            assertEquals(2, softwareProjects.size(), "Should return 2 Software projects");
             for (Project p : softwareProjects) {
                 assertEquals("Software", p.getType(), "All projects should be Software type");
             }
@@ -254,11 +255,11 @@ class ProjectServiceTest {
             projectService.addProject(hardware2);
 
             // When: Filtering by Hardware type
-            Project[] hardwareProjects = projectService.filterByType("Hardware");
+          List<Project> hardwareProjects = projectService.filterByType("Hardware");
 
             // Then: Should return only Hardware projects
             assertNotNull(hardwareProjects, "Filtered projects should not be null");
-            assertEquals(2, hardwareProjects.length, "Should return 2 Hardware projects");
+            assertEquals(2, hardwareProjects.size(), "Should return 2 Hardware projects");
             for (Project p : hardwareProjects) {
                 assertEquals("Hardware", p.getType(), "All projects should be Hardware type");
             }
@@ -274,14 +275,14 @@ class ProjectServiceTest {
             projectService.addProject(project);
 
             // When: Filtering with different case
-            Project[] projects1 = projectService.filterByType("software");
-            Project[] projects2 = projectService.filterByType("SOFTWARE");
-            Project[] projects3 = projectService.filterByType("Software");
+            List<Project> projects1 = projectService.filterByType("software");
+            List<Project> projects2 = projectService.filterByType("SOFTWARE");
+            List<Project> projects3 = projectService.filterByType("Software");
 
             // Then: All should return the same projects
-            assertEquals(1, projects1.length, "Lowercase filter should work");
-            assertEquals(1, projects2.length, "Uppercase filter should work");
-            assertEquals(1, projects3.length, "Mixed case filter should work");
+            assertEquals(1, projects1.size(), "Lowercase filter should work");
+            assertEquals(1, projects2.size(), "Uppercase filter should work");
+            assertEquals(1, projects3.size(), "Mixed case filter should work");
         }
 
         /**

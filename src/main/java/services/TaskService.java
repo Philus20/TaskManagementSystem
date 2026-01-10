@@ -7,6 +7,9 @@ import models.Task;
 import utils.exceptions.EmptyProjectException;
 import utils.exceptions.TaskNotFoundException;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * TaskService following SOLID principles:
  * - Single Responsibility: Manages task business logic only
@@ -51,8 +54,8 @@ public class TaskService implements ITaskService {
                 throw new IllegalStateException("Task with id " + task.getTaskId() + " already exists.");
             }
 
-            int index = taskIdGenerator.elementIndex(task.getTaskId());
-            taskRepository.add(task, index);
+
+            taskRepository.add(task, task.getTaskId());
         } catch (TaskNotFoundException e) {
             // Re-throw with more context
             throw new IllegalStateException("Failed to add task: " + e.getMessage(), e);
@@ -68,7 +71,7 @@ public class TaskService implements ITaskService {
     /**
      * Get all tasks
      */
-    public Task[] getAllTasks() {
+    public List<Task> getAllTasks() {
         return taskRepository.getAll();
     }
 
@@ -97,8 +100,7 @@ public class TaskService implements ITaskService {
                 if(taskStatus == "Completed")taskRepository.markAsComplete(task);
                else task.setTaskStatus(taskStatus);
                 // Update in repository
-                int index = taskIdGenerator.elementIndex(taskId);
-                taskRepository.update(index, task);
+                taskRepository.update(taskId, task);
             }
         } catch (TaskNotFoundException e) {
             // Task not found - return null gracefully
@@ -128,8 +130,7 @@ public class TaskService implements ITaskService {
         try {
             Task task = getTaskById(taskId);
             if (task != null) {
-                int index = taskIdGenerator.elementIndex(taskId);
-                taskRepository.removeById(index);
+                taskRepository.removeById(taskId);
             }
         } catch (TaskNotFoundException e) {
             // Task not found - handle gracefully (no-op or log)
@@ -150,16 +151,16 @@ public class TaskService implements ITaskService {
      * Get tasks by project ID
      * Enhanced with try-catch for robust exception handling
      */
-    public Task[] getTasksByProjectId(String projectId) {
+    public List<Task> getTasksByProjectId(String projectId) {
         if (projectId == null) {
-            return new Task[0];
+            return new ArrayList<>();
         }
 
         try {
             return taskRepository.findByProjectId(projectId);
         } catch (EmptyProjectException e) {
             // Project ID is null or invalid - return empty array gracefully
-            return new Task[0];
+            return new ArrayList<>();
         } catch (Exception e) {
             // Handle any unexpected exceptions
             throw new IllegalStateException("Unexpected error while retrieving tasks by project ID: " + e.getMessage(),
@@ -174,8 +175,8 @@ public class TaskService implements ITaskService {
      */
     public double calculateCompletionRate(String projectId) {
         try {
-            Task[] projectTasks = getTasksByProjectId(projectId);
-            if (projectTasks == null || projectTasks.length == 0) {
+            List<Task> projectTasks = getTasksByProjectId(projectId);
+            if (projectTasks.isEmpty()) {
                 return 0.0;
             }
 
@@ -187,11 +188,11 @@ public class TaskService implements ITaskService {
             }
 
             // Protection against division by zero (shouldn't happen, but safety first)
-            if (projectTasks.length == 0) {
+            if (projectTasks.isEmpty()) {
                 return 0.0;
             }
 
-            return (completed * 100.0) / projectTasks.length;
+            return (completed * 100.0) / projectTasks.size();
         } catch (ArithmeticException e) {
             // Division by zero protection
             return 0.0;
@@ -204,9 +205,9 @@ public class TaskService implements ITaskService {
     /**
      * Get tasks assigned to a user
      */
-    public Task[] getTasksByAssignedUserId(String userId) {
+    public List<Task> getTasksByAssignedUserId(String userId) {
         if (userId == null)
-            return new Task[0];
+            return new ArrayList<>();
         return taskRepository.findByAssignedUserId(userId);
     }
 }

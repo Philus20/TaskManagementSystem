@@ -4,8 +4,11 @@ import interfaces.IReporting;
 import models.Project;
 import models.ProjectStatusReportDto;
 import models.Task;
+import models.User;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class ReportService implements IReporting {
 
@@ -25,36 +28,36 @@ public class ReportService implements IReporting {
      */
 
     // build the report and return it as an array (arrays-only)
-    private ProjectStatusReportDto[] buildReport() {
-        Project[] projects = projectService.getAllProjects();
-        if (projects == null || projects.length == 0) {
-            return new ProjectStatusReportDto[0];
+    private List<ProjectStatusReportDto> buildReport() {
+        List<Project> projects = projectService.getAllProjects();
+        if (projects.isEmpty()) {
+            return new ArrayList<>();
         }
 
-        ProjectStatusReportDto[] temp = new ProjectStatusReportDto[projects.length];
+        List<ProjectStatusReportDto >temp = new ArrayList<>();
         int count = 0;
 
         for (Project p : projects) {
             if (p == null) continue;
-            Task[] tasks = taskService.getTasksByProjectId(p.getId());
-            int total = (tasks == null) ? 0 : tasks.length;
+            List<Task>  tasks = taskService.getTasksByProjectId(p.getId());
+            int total = (tasks.isEmpty()) ? 0 : tasks.size();
             int completed = 0;
-            if (tasks != null) {
+            if (!tasks.isEmpty()) {
                 for (Task t : tasks) {
                     if (t != null && "Completed".equalsIgnoreCase(t.getTaskStatus())) {
                         completed++;
                     }
                 }
             }
-            temp[count++] = new ProjectStatusReportDto(p.getId(), p.getName(), total, completed);
+            temp.add(count++,new ProjectStatusReportDto(p.getId(), p.getName(), total, completed)) ;
         }
 
-        return Arrays.copyOf(temp, count);
+        return temp;
     }
 
     @Override
     public void generateReport() {
-        ProjectStatusReportDto[] report = buildReport();
+        List<ProjectStatusReportDto> report = buildReport();
         displayReport(report);
 
         // print overall average completion
@@ -64,8 +67,8 @@ public class ReportService implements IReporting {
 
     // parameterless, uses injected taskService/projectService via buildReport()
     public double calculateAverageProjectStatusReport() {
-        ProjectStatusReportDto[] report = buildReport();
-        if (report == null || report.length == 0) return 0.0;
+        List<ProjectStatusReportDto> report = buildReport();
+        if (report.isEmpty()) return 0.0;
 
         int totalTasks = 0;
         int totalCompleted = 0;
@@ -82,8 +85,8 @@ public class ReportService implements IReporting {
 
 
     // Helper that prints report to console (loose UI coupling)
-    private void displayReport(ProjectStatusReportDto[] report) {
-        if (report == null || report.length == 0) {
+    private void displayReport(List<ProjectStatusReportDto> report) {
+        if (report.isEmpty()) {
             System.out.println("No report data.");
             return;
         }
