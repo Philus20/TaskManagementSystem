@@ -1,0 +1,45 @@
+{
+  "projects": [
+    {
+      "id": "P001",
+      "name": "Test Project",
+      "description": "Test Description",
+      "type": "Software",
+      "teamSize": 5,
+      "budget": 10000.0,
+      "language": "Java",
+      "tasks": [
+    {
+      "taskId": "T001",
+      "taskName": "Task C",
+      "taskStatus": "Completed",
+      "projectId": "P001"
+    },
+    {
+      "taskId": "T002",
+      "taskName": "Task A",
+      "taskStatus": "Completed",
+      "projectId": "P001"
+    },
+    {
+      "taskId": "T003",
+      "taskName": "Task B",
+      "taskStatus": "Completed",
+      "projectId": "P001"
+    }
+      ]
+    },
+    {
+      "id": "P002",
+      "name": "project 1",
+      "description": "software",
+      "type": "Software",
+      "teamSize": 5,
+      "budget": 50.0,
+      "language": "Java",
+      "tasks": [
+
+      ]
+    }
+  ]
+}

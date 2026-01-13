@@ -2,7 +2,6 @@ package Repository;
 
 import interfaces.IRepository;
 import models.Project;
-import models.User;
 import utils.exceptions.*;
 
 import java.util.*;
@@ -19,7 +18,7 @@ public class ProjectRepository implements IRepository<Project> {
 
     @Override
     public void add(Project project, String key) {
-        if (this.projects.isEmpty()) throw new EmptyProjectException("Project cannot be null");
+        if (project == null) throw new EmptyProjectException("Project cannot be null");
 
         if (projects.containsKey(key))
             throw new ProjectAlreadyExistException("Project already exists for this Name " + key);
@@ -60,15 +59,14 @@ public class ProjectRepository implements IRepository<Project> {
 
     @Override
     public void update(String index, Project project) {
-        Project temp = getById(index);
-        projects.put(project.getId(),project) ;
+        getById(index); // Validate that project exists
+        projects.put(project.getId(), project) ;
     }
 
     @Override
     public void removeById(String Id) {
-        Project temp = getById(Id);
-
-        projects.remove(temp.getId()) ;
+        Project projectToRemove = getById(Id);
+        projects.remove(projectToRemove.getId()) ;
     }
 
     /** Query helpers */

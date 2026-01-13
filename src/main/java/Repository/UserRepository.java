@@ -6,8 +6,6 @@ import services.GenerateUserId;
 import utils.exceptions.UserNotFoundException;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -17,57 +15,50 @@ import java.util.List;
  */
 public class UserRepository implements IRepository<User> {
 
-    private List<User> users ;
-    GenerateUserId userIdGenerator;
-
+    private List<User> users;
+    private GenerateUserId userIdGenerator;
 
     public UserRepository() {
         this.users = new ArrayList<>();
-       userIdGenerator = new GenerateUserId();
+        userIdGenerator = new GenerateUserId();
     }
 
 
 
     @Override
-    public void add(User user, String index) {
+    public void add(User user, String userId) {
         if (user == null) throw new UserNotFoundException("User cannot be null");
-
-        int idx = this.userIdGenerator.elementIndex(index);
-        if (idx < 0 ) throw new UserNotFoundException("Invalid index: " + index);
-
+        int idx = this.userIdGenerator.elementIndex(userId);
+        if (idx < 0 ) throw new UserNotFoundException("Invalid index: " + userId);
         if (users.contains(user)) {
-            throw new UserNotFoundException("User already exists at index " + index);
+            throw new UserNotFoundException("User already exists at index " + userId);
         }
-
         users.add(idx, user);
     }
 
 
     @Override
-    public User getById(String index) {
-        int idx = this.userIdGenerator.elementIndex(index);
+    public User getById(String userId) {
+        int idx = this.userIdGenerator.elementIndex(userId);
         if (idx < 0 || idx >= users.size()) throw new UserNotFoundException("Invalid index");
         return users.get(idx);
     }
 
     @Override
     public List<User> getAll() {
-        ;
         return users;
     }
 
     @Override
-    public void update(String index, User user) {
-        int idx = this.userIdGenerator.elementIndex(index);
-
+    public void update(String userId, User user) {
+        int idx = this.userIdGenerator.elementIndex(userId);
         if (idx < 0) throw new UserNotFoundException("Invalid index");
         users.add(idx,user);
     }
 
     @Override
-    public void removeById(String index) {
-        int idx = this.userIdGenerator.elementIndex(index);
-
+    public void removeById(String userId) {
+        int idx = this.userIdGenerator.elementIndex(userId);
         if (idx < 0 || idx >= users.size()) return;
         users.remove(idx);
     }

@@ -23,8 +23,19 @@ public class Main {
         TaskService taskService = new TaskService(taskRepository, taskIdGenerator);
         UserService userService = new UserService(userRepository, userIdGenerator);
         ReportService reportService = new ReportService(taskService, projectService);
+        ConcurrentTaskUpdateService concurrentService = new ConcurrentTaskUpdateService(taskService);
+        
+        // Inject dependencies to avoid circular dependencies
+        projectService.setTaskService(taskService);
+        taskService.setConcurrentUpdateService(concurrentService);
 
-        // Step 4: Create console menu (it internally creates all controllers and router)
+        // Step 4: Load data from files (after all services are initialized)
+        System.out.println("Loading data from files...");
+        projectService.loadProjectsFromFile();
+        taskService.loadTasksFromFile();
+        System.out.println("Data loading complete.");
+
+        // Step 5: Create console menu (it internally creates all controllers and router)
         ConsoleMenu consoleMenu = new ConsoleMenu(
                 projectService,
                 taskService,

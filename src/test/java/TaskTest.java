@@ -7,6 +7,8 @@ import org.junit.jupiter.api.Test;
 import services.GenerateTaskId;
 import services.TaskService;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -27,7 +29,7 @@ class TaskTest {
     @BeforeEach
     void setUp() {
         // Initialize fresh dependencies for each test
-        taskRepository = new TaskRepository(50);
+        taskRepository = new TaskRepository();
         taskIdGenerator = new GenerateTaskId();
         taskService = new TaskService(taskRepository, taskIdGenerator);
     }
@@ -230,10 +232,10 @@ class TaskTest {
         taskService.addTask(task3);
 
         // When: Getting tasks by project ID
-        Task[] tasks = taskService.getTasksByProjectId(projectId);
+        List<Task> tasks = taskService.getTasksByProjectId(projectId);
 
         // Then: Should return all tasks for the project
-        assertEquals(3, tasks.length,
+        assertEquals(3, tasks.size(),
                 "Should return 3 tasks for the project");
     }
 
@@ -246,11 +248,11 @@ class TaskTest {
         String projectId = "P0001";
 
         // When: Getting tasks by project ID
-        Task[] tasks = taskService.getTasksByProjectId(projectId);
+        List<Task> tasks = taskService.getTasksByProjectId(projectId);
 
         // Then: Should return empty array
-        assertEquals(0, tasks.length,
-                "Should return empty array when no tasks exist for project");
+        assertEquals(0, tasks.size(),
+                "Should return empty list when no tasks exist for project");
     }
 
     /**

@@ -300,12 +300,12 @@ class ProjectServiceTest {
             projectService.addProject(project3);
 
             // When: Finding projects in budget range 20000-80000
-            Project[] projects = projectService.findByBudgetRange(20000.0, 80000.0);
+            List<Project> projects = projectService.findByBudgetRange(20000.0, 80000.0);
 
             // Then: Should return projects within range
             assertNotNull(projects, "Filtered projects should not be null");
-            assertEquals(1, projects.length, "Should return 1 project in range");
-            assertTrue(projects[0].getBudget() >= 20000.0 && projects[0].getBudget() <= 80000.0,
+            assertEquals(1, projects.size(), "Should return 1 project in range");
+            assertTrue(projects.get(0).getBudget() >= 20000.0 && projects.get(0).getBudget() <= 80000.0,
                     "Project budget should be within range");
         }
 
@@ -324,11 +324,11 @@ class ProjectServiceTest {
             projectService.addProject(project3);
 
             // When: Finding projects in budget range 25000-55000
-            Project[] projects = projectService.findByBudgetRange(25000.0, 55000.0);
+            List<Project> projects = projectService.findByBudgetRange(25000.0, 55000.0);
 
             // Then: Should return all projects
             assertNotNull(projects, "Filtered projects should not be null");
-            assertEquals(3, projects.length, "Should return all 3 projects");
+            assertEquals(3, projects.size(), "Should return all 3 projects");
         }
 
         /**
@@ -344,11 +344,11 @@ class ProjectServiceTest {
             projectService.addProject(project2);
 
             // When: Finding projects in budget range 50000-100000
-            Project[] projects = projectService.findByBudgetRange(50000.0, 100000.0);
+            List<Project> projects = projectService.findByBudgetRange(50000.0, 100000.0);
 
             // Then: Should return empty array
             assertNotNull(projects, "Filtered projects should not be null");
-            assertEquals(0, projects.length, "Should return empty array when no projects in range");
+            assertEquals(0, projects.size(), "Should return empty list when no projects in range");
         }
 
         /**

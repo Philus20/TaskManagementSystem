@@ -9,6 +9,7 @@ import models.AdminUser;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * UserService following SOLID principles:
@@ -20,6 +21,7 @@ public class UserService implements IUserService {
     private final UserRepository userRepository;
     private final IdGenerator userIdGenerator;
     private User currentUser;
+    private final FilePersistenceService filePersistenceService;
 
     public UserService(UserRepository userRepository, IdGenerator userIdGenerator) {
         if (userRepository == null) throw new IllegalArgumentException("UserRepository cannot be null");
@@ -27,6 +29,28 @@ public class UserService implements IUserService {
         this.userRepository = userRepository;
         this.userIdGenerator = userIdGenerator;
         this.currentUser = null;
+        this.filePersistenceService = new FilePersistenceService();
+    }
+    
+    /**
+     * Load users from file - call this after all dependencies are initialized
+     */
+    public void loadUsersFromFile() {
+        try {
+            Map<String, User> loadedUsers = filePersistenceService.loadUsers();
+            
+            // Update the ID generator counter based on existing users
+            if (!loadedUsers.isEmpty()) {
+                GenerateUserId.updateCounterFromExistingIds(new ArrayList<>(loadedUsers.keySet()));
+            }
+            
+            for (Map.Entry<String, User> entry : loadedUsers.entrySet()) {
+                userRepository.add(entry.getValue(), entry.getKey());
+            }
+            System.out.println("Loaded " + loadedUsers.size() + " users from file.");
+        } catch (Exception e) {
+            System.out.println("Starting with empty user list: " + e.getMessage());
+        }
     }
 
     /**
@@ -43,7 +67,6 @@ public class UserService implements IUserService {
         System.out.println(generatedId + "id");
         user.setId(generatedId);
 
-        int index = userIdGenerator.elementIndex(generatedId);
         userRepository.add(user, generatedId);
         return user;
     }

@@ -20,8 +20,8 @@ public final class ValidationUtils {
     private final Scanner scanner;
     private final ProjectService projectService; // optional
     private final UserService userService;       // optional
-    private final GenerateProjectId idGenerator;
 
+    private final GenerateProjectId idGenerator;
 
     // Validation constants
     private static final Set<String> VALID_TASK_STATUSES = Set.of("Pending", "In Progress", "Completed");
@@ -29,8 +29,11 @@ public final class ValidationUtils {
     private static final Set<String> VALID_USER_ROLES = Set.of("Admin", "Regular");
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
 
-    public ValidationUtils(Scanner scanner, GenerateProjectId idGenerator) {
-        this(scanner, null, null, idGenerator);
+    public ValidationUtils(Scanner scanner, GenerateProjectId _idGenerator) {
+        this.scanner = scanner;
+        this.projectService = null;
+        this.userService = null;
+        this.idGenerator = _idGenerator;
     }
 
     public ValidationUtils(Scanner scanner, ProjectService projectService, UserService userService, GenerateProjectId idGenerator) {

@@ -8,9 +8,7 @@ import utils.exceptions.EmptyProjectException;
 import utils.exceptions.TaskNotFoundException;
 import utils.exceptions.UserNotFoundException;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 /**
  * TaskRepository following Single Responsibility Principle (SRP)
@@ -19,38 +17,47 @@ import java.util.List;
  */
 public class TaskRepository implements IRepository<Task>, Completable {
 
-    List<Task> tasks;
-    GenerateTaskId taskIdGenerator;
+    private List<Task> tasks;
+    private GenerateTaskId taskIdGenerator;
 
     public TaskRepository() {
         this.taskIdGenerator = new GenerateTaskId();
-        this.tasks = new ArrayList<>() ;
-
+        this.tasks = new ArrayList<>();
     }
 
 
 
     @Override
-    public void add(Task task, String index) {
+    public void add(Task task, String taskId) {
         if (task == null) throw new TaskNotFoundException("Task cannot be null");
-        int idx = this.taskIdGenerator.elementIndex(index);
-        if (this.tasks.contains(task))
-            throw new TaskNotFoundException("Task already exists at index " + index);
+        int idx = this.taskIdGenerator.elementIndex(taskId);
+        if (idx < 0 || idx >= tasks.size()) {
+            // Expand list if needed
+            while (tasks.size() <= idx) {
+                tasks.add(null);
+            }
+        }
+        
+        if (tasks.contains(task))
+            throw new TaskNotFoundException("Task already exists at index " + taskId);
 
-        this.tasks.add(idx, task);
+        tasks.add(idx, task);
     }
 
     @Override
-    public Task getById(String index) {
-        int idx = taskIdGenerator.elementIndex(index);
+    public Task getById(String taskId) {
+        int idx = taskIdGenerator.elementIndex(taskId);
 
         if (idx < 0 || idx >= tasks.size()) {
-            throw new TaskNotFoundException("No task exists for index: " + index);
+            // Expand list if needed
+            while (tasks.size() <= idx) {
+                tasks.add(null);
+            }
         }
 
         Task task = tasks.get(idx);
         if (task == null) {
-            throw new TaskNotFoundException("Task at index " + index + " is null");
+            throw new TaskNotFoundException("No Task Found for this Id: " + taskId);
         }
 
         return task;
@@ -59,21 +66,29 @@ public class TaskRepository implements IRepository<Task>, Completable {
 
     @Override
     public List<Task> getAll() {
-
         return tasks;
     }
 
     @Override
-    public void update(String index, Task task) {
-        int idx = parseAndValidateIndex(index);
+    public void update(String taskId, Task task) {
+        int idx = taskIdGenerator.elementIndex(taskId);
+        if (idx < 0 || idx >= tasks.size()) {
+            // Expand list if needed
+            while (tasks.size() <= idx) {
+                tasks.add(null);
+            }
+        }
         tasks.set(idx, task);
     }
 
 
     @Override
-    public void removeById(String index) {
-        int idx = parseAndValidateIndex(index);
-        this.tasks.remove(idx);
+    public void removeById(String taskId) {
+        int idx = taskIdGenerator.elementIndex(taskId);
+        if (idx < 0 || idx >= tasks.size()) {
+            return; // Task doesn't exist, nothing to remove
+        }
+        tasks.remove(idx);
     }
 
     /**
@@ -89,7 +104,7 @@ public class TaskRepository implements IRepository<Task>, Completable {
     }
 
     public Task findByTaskId(String taskId) {
-        if (taskId == null) throw new TaskNotFoundException("Project ID cannot be null");
+        if (taskId == null) throw new TaskNotFoundException("Task ID cannot be null");
         return tasks.stream()
                 .filter(t -> t != null && taskId.equals(t.getTaskId()))
                 .findFirst()
@@ -100,7 +115,7 @@ public class TaskRepository implements IRepository<Task>, Completable {
         if (userId == null) throw new UserNotFoundException("User ID cannot be null");
         return tasks.stream()
                 .filter(t -> t != null && userId.equals(t.getAssignedUserId()))
-        .toList();
+                .toList();
     }
 
     @Override
@@ -110,10 +125,4 @@ public class TaskRepository implements IRepository<Task>, Completable {
 
     }
 
-    private int parseAndValidateIndex(String index){
-        int idxToNumber = this.taskIdGenerator.elementIndex(index);
-        if (idxToNumber < 0 || idxToNumber > tasks.size()) throw new TaskNotFoundException("Invalid Index");
-
-        return idxToNumber;
-    }
 }
