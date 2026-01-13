@@ -7,6 +7,7 @@ import models.SoftwareProject;
 import models.HardwareProject;
 import models.AdminUser;
 import models.RegularUser;
+import utils.FileUtils;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -16,6 +17,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * File persistence service using NIO for JSON-like data storage
@@ -28,53 +32,34 @@ public class FilePersistenceService {
     private static final String TASKS_FILE = "tasks_data.json";
     private static final String USERS_FILE = "users_data.json";
     
-    private final Path dataDir;
-    private final Path projectsPath;
-    private final Path tasksPath;
-    private final Path usersPath;
-    
     public FilePersistenceService() {
-        this.dataDir = Paths.get(DATA_DIRECTORY);
-        this.projectsPath = dataDir.resolve(PROJECTS_FILE);
-        this.tasksPath = dataDir.resolve(TASKS_FILE);
-        this.usersPath = dataDir.resolve(USERS_FILE);
-        
-        // Create data directory if it doesn't exist
-        try {
-            if (!Files.exists(dataDir)) {
-                Files.createDirectories(dataDir);
-            }
-        } catch (IOException e) {
-            System.err.println("Failed to create data directory: " + e.getMessage());
-        }
+        // Create data directory if it doesn't exist using FileUtils
+        FileUtils.createDirectoryIfNotExists(DATA_DIRECTORY);
     }
     
     /**
      * Save all projects to file using NIO
      */
     public synchronized void saveProjects(Map<String, Project> projects, List<Task> allTasks) {
-        try {
-            StringBuilder jsonBuilder = new StringBuilder();
-            jsonBuilder.append("{\n");
-            jsonBuilder.append("  \"projects\": [\n");
-            
-            boolean first = true;
-            for (Map.Entry<String, Project> entry : projects.entrySet()) {
-                if (!first) {
-                    jsonBuilder.append(",\n");
-                }
-                first = false;
-                jsonBuilder.append(projectToJson(entry.getValue(), allTasks));
+        StringBuilder jsonBuilder = new StringBuilder();
+        jsonBuilder.append("{\n");
+        jsonBuilder.append("  \"projects\": [\n");
+        
+        boolean first = true;
+        for (Map.Entry<String, Project> entry : projects.entrySet()) {
+            if (!first) {
+                jsonBuilder.append(",\n");
             }
-            
-            jsonBuilder.append("\n  ]\n");
-            jsonBuilder.append("}");
-            
-            Files.writeString(projectsPath, jsonBuilder.toString());
-            System.out.println("Projects saved successfully to " + projectsPath);
-            
-        } catch (IOException e) {
-            System.err.println("Failed to save projects: " + e.getMessage());
+            first = false;
+            jsonBuilder.append(projectToJson(entry.getValue(), allTasks));
+        }
+        
+        jsonBuilder.append("\n  ]\n");
+        jsonBuilder.append("}");
+        
+        String projectsFilePath = DATA_DIRECTORY + "/" + PROJECTS_FILE;
+        if (FileUtils.writeToFile(projectsFilePath, jsonBuilder.toString())) {
+            System.out.println("Projects saved successfully to " + projectsFilePath);
         }
     }
     
@@ -84,36 +69,30 @@ public class FilePersistenceService {
     public synchronized Map<String, Project> loadProjects() {
         Map<String, Project> projects = new HashMap<>();
         
-        if (!Files.exists(projectsPath)) {
+        String projectsFilePath = DATA_DIRECTORY + "/" + PROJECTS_FILE;
+        if (!FileUtils.fileExists(projectsFilePath)) {
             System.out.println("Projects file not found. Starting with empty project list.");
             return projects;
         }
         
-        try {
-            String content = Files.readString(projectsPath);
-            if (content.trim().isEmpty()) {
-                System.out.println("Projects file is empty. Starting with empty project list.");
-                return projects;
-            }
-            
-            // Simple JSON parsing (basic implementation)
-            String[] projectLines = content.split("\\{");
-            for (String line : projectLines) {
-                if (line.contains("\"id\"")) {
-                    Project project = jsonToProject(line);
-                    if (project != null) {
-                        projects.put(project.getId(), project);
-                    }
-                }
-            }
-            
-            System.out.println("Loaded " + projects.size() + " projects from file.");
-            
-        } catch (IOException e) {
-            System.err.println("Failed to load projects: " + e.getMessage());
-            System.out.println("Starting with empty project list.");
+        String content = FileUtils.readFromFile(projectsFilePath);
+        if (content == null || content.trim().isEmpty()) {
+            System.out.println("Projects file is empty. Starting with empty project list.");
+            return projects;
         }
         
+        // Simple JSON parsing (basic implementation)
+        String[] projectLines = content.split("\\{");
+        for (String line : projectLines) {
+            if (line.contains("\"id\"")) {
+                Project project = jsonToProject(line);
+                if (project != null) {
+                    projects.put(project.getId(), project);
+                }
+            }
+        }
+        
+        System.out.println("Loaded " + projects.size() + " projects from file.");
         return projects;
     }
     
@@ -121,26 +100,23 @@ public class FilePersistenceService {
      * Save all tasks to file using NIO
      */
     public synchronized void saveTasks(List<Task> tasks) {
-        try {
-            StringBuilder jsonBuilder = new StringBuilder();
-            jsonBuilder.append("{\n");
-            jsonBuilder.append("  \"tasks\": [\n");
-            
-            for (int i = 0; i < tasks.size(); i++) {
-                if (i > 0) {
-                    jsonBuilder.append(",\n");
-                }
-                jsonBuilder.append(taskToJson(tasks.get(i)));
+        StringBuilder jsonBuilder = new StringBuilder();
+        jsonBuilder.append("{\n");
+        jsonBuilder.append("  \"tasks\": [\n");
+        
+        for (int i = 0; i < tasks.size(); i++) {
+            if (i > 0) {
+                jsonBuilder.append(",\n");
             }
-            
-            jsonBuilder.append("\n  ]\n");
-            jsonBuilder.append("}");
-            
-            Files.writeString(tasksPath, jsonBuilder.toString());
-            System.out.println("Tasks saved successfully to " + tasksPath);
-            
-        } catch (IOException e) {
-            System.err.println("Failed to save tasks: " + e.getMessage());
+            jsonBuilder.append(taskToJson(tasks.get(i)));
+        }
+        
+        jsonBuilder.append("\n  ]\n");
+        jsonBuilder.append("}");
+        
+        String tasksFilePath = DATA_DIRECTORY + "/" + TASKS_FILE;
+        if (FileUtils.writeToFile(tasksFilePath, jsonBuilder.toString())) {
+            System.out.println("Tasks saved successfully to " + tasksFilePath);
         }
     }
     
@@ -150,36 +126,30 @@ public class FilePersistenceService {
     public synchronized List<Task> loadTasks() {
         List<Task> tasks = new ArrayList<>();
         
-        if (!Files.exists(tasksPath)) {
+        String tasksFilePath = DATA_DIRECTORY + "/" + TASKS_FILE;
+        if (!FileUtils.fileExists(tasksFilePath)) {
             System.out.println("Tasks file not found. Starting with empty task list.");
             return tasks;
         }
         
-        try {
-            String content = Files.readString(tasksPath);
-            if (content.trim().isEmpty()) {
-                System.out.println("Tasks file is empty. Starting with empty task list.");
-                return tasks;
-            }
-            
-            // Simple JSON parsing
-            String[] taskLines = content.split("\\{");
-            for (String line : taskLines) {
-                if (line.contains("\"taskId\"")) {
-                    Task task = jsonToTask(line);
-                    if (task != null) {
-                        tasks.add(task);
-                    }
-                }
-            }
-            
-            System.out.println("Loaded " + tasks.size() + " tasks from file.");
-            
-        } catch (IOException e) {
-            System.err.println("Failed to load tasks: " + e.getMessage());
-            System.out.println("Starting with empty task list.");
+        String content = FileUtils.readFromFile(tasksFilePath);
+        if (content == null || content.trim().isEmpty()) {
+            System.out.println("Tasks file is empty. Starting with empty task list.");
+            return tasks;
         }
         
+        // Simple JSON parsing
+        String[] taskLines = content.split("\\\\{");
+        for (String line : taskLines) {
+            if (line.contains("\"taskId\"")) {
+                Task task = jsonToTask(line);
+                if (task != null) {
+                    tasks.add(task);
+                }
+            }
+        }
+        
+        System.out.println("Loaded " + tasks.size() + " tasks from file.");
         return tasks;
     }
     
@@ -187,28 +157,25 @@ public class FilePersistenceService {
      * Save all users to file using NIO
      */
     public synchronized void saveUsers(Map<String, User> users) {
-        try {
-            StringBuilder jsonBuilder = new StringBuilder();
-            jsonBuilder.append("{\n");
-            jsonBuilder.append("  \"users\": [\n");
-            
-            boolean first = true;
-            for (Map.Entry<String, User> entry : users.entrySet()) {
-                if (!first) {
-                    jsonBuilder.append(",\n");
-                }
-                first = false;
-                jsonBuilder.append(userToJson(entry.getValue()));
+        StringBuilder jsonBuilder = new StringBuilder();
+        jsonBuilder.append("{\n");
+        jsonBuilder.append("  \"users\": [\n");
+        
+        boolean first = true;
+        for (Map.Entry<String, User> entry : users.entrySet()) {
+            if (!first) {
+                jsonBuilder.append(",\n");
             }
-            
-            jsonBuilder.append("\n  ]\n");
-            jsonBuilder.append("}");
-            
-            Files.writeString(usersPath, jsonBuilder.toString());
-            System.out.println("Users saved successfully to " + usersPath);
-            
-        } catch (IOException e) {
-            System.err.println("Failed to save users: " + e.getMessage());
+            first = false;
+            jsonBuilder.append(userToJson(entry.getValue()));
+        }
+        
+        jsonBuilder.append("\n  ]\n");
+        jsonBuilder.append("}");
+        
+        String usersFilePath = DATA_DIRECTORY + "/" + USERS_FILE;
+        if (FileUtils.writeToFile(usersFilePath, jsonBuilder.toString())) {
+            System.out.println("Users saved successfully to " + usersFilePath);
         }
     }
     
@@ -217,6 +184,9 @@ public class FilePersistenceService {
      */
     public synchronized Map<String, User> loadUsers() {
         Map<String, User> users = new HashMap<>();
+        
+        String usersFilePath = DATA_DIRECTORY + "/" + USERS_FILE;
+        Path usersPath = Paths.get(usersFilePath);
         
         if (!Files.exists(usersPath)) {
             System.out.println("Users file not found. Starting with empty user list.");
@@ -420,5 +390,59 @@ public class FilePersistenceService {
         }
         
         return null;
+    }
+    
+    // Streaming methods for enhanced performance
+    public CompletableFuture<Void> saveTasksAsync(Stream<Task> taskStream) {
+        return CompletableFuture.runAsync(() -> {
+            List<Task> tasks = taskStream.collect(Collectors.toList());
+            saveTasks(tasks);
+        });
+    }
+    
+    public CompletableFuture<Void> saveProjectsAsync(Stream<Project> projectStream, List<Task> allTasks) {
+        return CompletableFuture.runAsync(() -> {
+            Map<String, Project> projects = projectStream
+                    .collect(Collectors.toMap(Project::getId, project -> project));
+            saveProjects(projects, allTasks);
+        });
+    }
+    
+    public CompletableFuture<Void> saveUsersAsync(Stream<User> userStream) {
+        return CompletableFuture.runAsync(() -> {
+            Map<String, User> users = userStream
+                    .collect(Collectors.toMap(User::getId, user -> user));
+            saveUsers(users);
+        });
+    }
+    
+    public Stream<Task> loadTasksAsStream() {
+        try {
+            List<Task> tasks = loadTasks();
+            return tasks.stream();
+        } catch (Exception e) {
+            System.err.println("Error loading tasks as stream: " + e.getMessage());
+            return Stream.empty();
+        }
+    }
+    
+    public Stream<Project> loadProjectsAsStream() {
+        try {
+            Map<String, Project> projects = loadProjects();
+            return projects.values().stream();
+        } catch (Exception e) {
+            System.err.println("Error loading projects as stream: " + e.getMessage());
+            return Stream.empty();
+        }
+    }
+    
+    public Stream<User> loadUsersAsStream() {
+        try {
+            Map<String, User> users = loadUsers();
+            return users.values().stream();
+        } catch (Exception e) {
+            System.err.println("Error loading users as stream: " + e.getMessage());
+            return Stream.empty();
+        }
     }
 }

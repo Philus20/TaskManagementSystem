@@ -4,12 +4,14 @@ package services;
 import Repository.ProjectRepository;
 import interfaces.IProjectService;
 import interfaces.ProjectFilter;
+import interfaces.IStreamService;
 import models.Project;
 import models.Task;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -24,12 +26,14 @@ public class ProjectService implements IProjectService {
     private final  GenerateProjectId projectIdGenerator;
     private final FilePersistenceService filePersistenceService;
     private TaskService taskService;
+    private IStreamService streamService;
 
     public ProjectService(ProjectRepository projectRepository, GenerateProjectId projectIdGenerator) {
         this.projectRepository = projectRepository;
         this.projectIdGenerator = projectIdGenerator;
         this.filePersistenceService = new FilePersistenceService();
         this.taskService = null; // Will be injected later to avoid circular dependency
+        this.streamService = null; // Will be injected later
     }
     
     /**
@@ -129,6 +133,16 @@ public class ProjectService implements IProjectService {
      * Stream-based project analysis
      */
     public double getAverageBudget() {
+        if (streamService != null) {
+            try {
+                return streamService.getProjectBudgetAnalyticsConcurrently()
+                        .get(5, java.util.concurrent.TimeUnit.SECONDS)
+                        .getOrDefault("averageBudget", 0.0);
+            } catch (Exception e) {
+                System.err.println("StreamService calculation failed, falling back to traditional method: " + e.getMessage());
+            }
+        }
+        
         return projectRepository.getAll().stream()
                 .mapToDouble(Project::getBudget)
                 .average()
@@ -142,6 +156,19 @@ public class ProjectService implements IProjectService {
     }
     
     public List<Project> getCompletedProjects() {
+        if (streamService != null) {
+            try {
+                return streamService.getTopPerformingProjectsConcurrently(Integer.MAX_VALUE)
+                        .get(5, java.util.concurrent.TimeUnit.SECONDS)
+                        .stream()
+                        .map(projectId -> projectRepository.getById(projectId))
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList());
+            } catch (Exception e) {
+                System.err.println("StreamService calculation failed, falling back to traditional method: " + e.getMessage());
+            }
+        }
+        
         // Projects with completion rate >= 100%
         return projectRepository.getAll().stream()
                 .filter(project -> {
@@ -175,6 +202,13 @@ public class ProjectService implements IProjectService {
      */
     public void setTaskService(TaskService taskService) {
         this.taskService = taskService;
+    }
+
+    /**
+     * Set StreamService dependency
+     */
+    public void setStreamService(IStreamService streamService) {
+        this.streamService = streamService;
     }
 
 

@@ -9,9 +9,11 @@ import Repository.TaskRepository;
 import interfaces.ITaskService;
 import interfaces.IdGenerator;
 import interfaces.TaskFilter;
+import interfaces.IStreamService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import models.Task;
 import utils.exceptions.EmptyProjectException;
@@ -22,6 +24,7 @@ public class TaskService implements ITaskService {
     private final IdGenerator taskIdGenerator;
     private final FilePersistenceService filePersistenceService;
     private ConcurrentTaskUpdateService concurrentUpdateService;
+    private IStreamService streamService;
 
     public TaskService(TaskRepository var1, IdGenerator var2) {
         if (var1 == null) {
@@ -33,6 +36,7 @@ public class TaskService implements ITaskService {
             this.taskIdGenerator = var2;
             this.filePersistenceService = new FilePersistenceService();
             this.concurrentUpdateService = null;
+            this.streamService = null; // Will be injected later
         }
     }
 
@@ -40,11 +44,25 @@ public class TaskService implements ITaskService {
         this.concurrentUpdateService = var1;
     }
 
+    public void setStreamService(IStreamService streamService) {
+        this.streamService = streamService;
+    }
+
     public CompletableFuture<List<Task>> addTasksConcurrently(List<Task> var1) {
+        if (streamService != null) {
+            return streamService.streamTasksConcurrently(task -> true)
+                    .thenCompose(existingTasks -> {
+                        // Add new tasks and return updated list
+                        return CompletableFuture.completedFuture(addTasksSequentially(var1));
+                    });
+        }
         return this.concurrentUpdateService == null ? CompletableFuture.completedFuture(this.addTasksSequentially(var1)) : this.concurrentUpdateService.addTasksConcurrently(var1);
     }
 
     public CompletableFuture<List<Task>> updateTasksConcurrently(List<String> var1, String var2) {
+        if (streamService != null) {
+            return streamService.batchUpdateTasksConcurrently(var1, var2);
+        }
         return this.concurrentUpdateService == null ? CompletableFuture.completedFuture(this.updateTasksSequentially(var1, var2)) : this.concurrentUpdateService.updateTasksConcurrently(var1, var2);
     }
 
@@ -229,6 +247,14 @@ public class TaskService implements ITaskService {
     }
 
     public double calculateCompletionRate(String var1) {
+        if (streamService != null) {
+            try {
+                return streamService.calculateProjectCompletionRateConcurrently(var1).get(5, TimeUnit.SECONDS);
+            } catch (Exception e) {
+                System.err.println("StreamService calculation failed, falling back to traditional method: " + e.getMessage());
+            }
+        }
+        
         try {
             List<Task> var2 = this.getTasksByProjectId(var1);
             if (var2.isEmpty()) {
@@ -240,7 +266,7 @@ public class TaskService implements ITaskService {
         } catch (ArithmeticException var5) {
             return (double)0.0F;
         } catch (Exception var6) {
-            throw new IllegalStateException("Unexpected error while calculating completion rate: " + var6.getMessage(), var6);
+            throw new IllegalStateException("Unexpected error while calculating completion rate: " + var6.getMessage());
         }
     }
 

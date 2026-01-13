@@ -30,6 +30,18 @@
       ]
     },
     {
+      "id": "P003",
+      "name": "project1",
+      "description": "dkd",
+      "type": "Software",
+      "teamSize": 5,
+      "budget": 54.0,
+      "language": "java",
+      "tasks": [
+
+      ]
+    },
+    {
       "id": "P002",
       "name": "project 1",
       "description": "software",
@@ -38,7 +50,13 @@
       "budget": 50.0,
       "language": "Java",
       "tasks": [
-
+    {
+      "taskId": "T004",
+      "taskName": "task1",
+      "taskStatus": "In Progress",
+      "projectId": "P002",
+      "assignedUserId": "U001"
+    }
       ]
     }
   ]
