@@ -3,6 +3,7 @@ package utils;
 import services.GenerateProjectId;
 import services.ProjectService;
 import services.UserService;
+import utils.RegexValidator;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -24,10 +25,7 @@ public final class ValidationUtils {
     private final GenerateProjectId idGenerator;
 
     // Validation constants
-    private static final Set<String> VALID_TASK_STATUSES = Set.of("Pending", "In Progress", "Completed");
-    private static final Set<String> VALID_PROJECT_TYPES = Set.of("Software", "Hardware");
-    private static final Set<String> VALID_USER_ROLES = Set.of("Admin", "Regular");
-    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
+    // Note: These are kept for backward compatibility but validation now uses RegexValidator
 
     public ValidationUtils(Scanner scanner, GenerateProjectId _idGenerator) {
         this.scanner = scanner;
@@ -191,25 +189,23 @@ public final class ValidationUtils {
        --------------------------- */
 
     public static boolean validateTaskStatus(String status) {
-        return status != null && VALID_TASK_STATUSES.stream()
-                .anyMatch(valid -> valid.equalsIgnoreCase(status.trim()));
+        return RegexValidator.isValidTaskStatus(status);
     }
 
     public static boolean validateProjectType(String type) {
-        return type != null && VALID_PROJECT_TYPES.stream()
-                .anyMatch(valid -> valid.equalsIgnoreCase(type.trim()));
+        return RegexValidator.isValidProjectType(type);
     }
 
     public static boolean validateEmail(String email) {
-        return email != null && EMAIL_PATTERN.matcher(email.trim()).matches();
+        return RegexValidator.isValidEmail(email != null ? email.trim() : email);
     }
 
     public static boolean validateTeamSize(int teamSize) {
-        return teamSize > 0;
+        return RegexValidator.isValidPositiveInteger(String.valueOf(teamSize));
     }
 
     public static boolean validateBudget(double budget) {
-        return budget >= 0;
+        return RegexValidator.isValidDecimal(String.valueOf(budget));
     }
 
     public static boolean validateBudgetRange(double minBudget, double maxBudget) {
@@ -217,8 +213,7 @@ public final class ValidationUtils {
     }
 
     public static boolean validateUserRole(String role) {
-        return role != null && VALID_USER_ROLES.stream()
-                .anyMatch(valid -> valid.equalsIgnoreCase(role.trim()));
+        return RegexValidator.isValidUserRole(role);
     }
 
     public static boolean hasText(String value) {

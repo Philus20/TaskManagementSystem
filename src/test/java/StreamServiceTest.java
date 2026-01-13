@@ -35,7 +35,6 @@ class StreamServiceTest {
     private TaskService taskService;
     private ProjectService projectService;
     private UserService userService;
-    private FilePersistenceService filePersistenceService;
     private TaskRepository taskRepository;
     private ProjectRepository projectRepository;
     private UserRepository userRepository;
@@ -51,10 +50,9 @@ class StreamServiceTest {
         taskService = new TaskService(taskRepository, new GenerateTaskId());
         projectService = new ProjectService(projectRepository, new GenerateProjectId());
         userService = new UserService(userRepository, new GenerateUserId());
-        filePersistenceService = new FilePersistenceService();
 
         // Create stream service with all dependencies
-        streamService = new StreamService(taskService, projectService, userService, filePersistenceService);
+        streamService = new StreamService(taskService, projectService, userService);
 
         // Set up bidirectional dependencies
         taskService.setStreamService(streamService);

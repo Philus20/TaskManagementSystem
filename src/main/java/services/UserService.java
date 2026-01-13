@@ -6,6 +6,8 @@ import interfaces.IUserService;
 import models.User;
 import models.RegularUser;
 import models.AdminUser;
+import utils.FileUtils;
+import utils.RegexValidator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +23,6 @@ public class UserService implements IUserService {
     private final UserRepository userRepository;
     private final IdGenerator userIdGenerator;
     private User currentUser;
-    private final FilePersistenceService filePersistenceService;
 
     public UserService(UserRepository userRepository, IdGenerator userIdGenerator) {
         if (userRepository == null) throw new IllegalArgumentException("UserRepository cannot be null");
@@ -29,7 +30,9 @@ public class UserService implements IUserService {
         this.userRepository = userRepository;
         this.userIdGenerator = userIdGenerator;
         this.currentUser = null;
-        this.filePersistenceService = new FilePersistenceService();
+        
+        // Initialize data directory
+        FileUtils.createDirectoryIfNotExists("src/data");
     }
     
     /**
@@ -37,7 +40,7 @@ public class UserService implements IUserService {
      */
     public void loadUsersFromFile() {
         try {
-            Map<String, User> loadedUsers = filePersistenceService.loadUsers();
+            Map<String, User> loadedUsers = FileUtils.loadUsers();
             
             // Update the ID generator counter based on existing users
             if (!loadedUsers.isEmpty()) {
@@ -60,6 +63,15 @@ public class UserService implements IUserService {
         if (name == null || email == null) {
             throw new IllegalArgumentException("Name and email cannot be null");
         }
+        
+        // Validate input using RegexValidator
+        if (!RegexValidator.isValidName(name)) {
+            throw new IllegalArgumentException("Invalid name format. Only letters and spaces allowed, 2-50 characters.");
+        }
+        
+        if (!RegexValidator.isValidEmail(email)) {
+            throw new IllegalArgumentException("Invalid email format.");
+        }
 
         RegularUser user = new RegularUser(name, email);
         // Set generated ID
@@ -78,6 +90,15 @@ public class UserService implements IUserService {
         if (name == null || email == null) {
             throw new IllegalArgumentException("Name and email cannot be null");
         }
+        
+        // Validate input using RegexValidator
+        if (!RegexValidator.isValidName(name)) {
+            throw new IllegalArgumentException("Invalid name format. Only letters and spaces allowed, 2-50 characters.");
+        }
+        
+        if (!RegexValidator.isValidEmail(email)) {
+            throw new IllegalArgumentException("Invalid email format.");
+        }
 
         AdminUser user = new AdminUser(name, email);
         // Set generated ID
@@ -93,6 +114,11 @@ public class UserService implements IUserService {
      */
     public User login(String userId) {
         if (userId == null) return null;
+        
+        // Validate user ID format
+        if (!RegexValidator.isValidUserId(userId)) {
+            throw new IllegalArgumentException("Invalid user ID format. Expected U001, U002, etc.");
+        }
 
         User user = getUserById(userId);
         if (user != null) {

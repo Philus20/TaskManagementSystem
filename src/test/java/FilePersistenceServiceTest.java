@@ -15,17 +15,17 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import utils.FileUtils;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * JUnit 5 tests for FilePersistenceService
+ * JUnit 5 tests for FileUtils
  * Testing NIO-based file persistence for Week 3 requirements
  */
-@DisplayName("FilePersistenceService Tests")
-class FilePersistenceServiceTest {
+@DisplayName("FileUtils Tests")
+class FileUtilsTest {
 
-    private FilePersistenceService filePersistenceService;
     private static final String TEST_DATA_DIR = "test_data";
     private Path testDirPath;
 
@@ -45,8 +45,6 @@ class FilePersistenceServiceTest {
                 });
         }
         Files.createDirectories(testDirPath);
-        
-        filePersistenceService = new FilePersistenceService();
     }
 
     @AfterEach
@@ -98,10 +96,10 @@ class FilePersistenceServiceTest {
             projects.put("P002", hardwareProject);
 
             // Save projects
-            assertDoesNotThrow(() -> filePersistenceService.saveProjects(projects, List.of()));
+            assertDoesNotThrow(() -> FileUtils.saveProjects(projects, List.of()));
 
             // Load projects
-            Map<String, Project> loadedProjects = filePersistenceService.loadProjects();
+            Map<String, Project> loadedProjects = FileUtils.loadProjects();
 
             // Verify loaded projects
             assertEquals(2, loadedProjects.size());
@@ -126,16 +124,16 @@ class FilePersistenceServiceTest {
         void testEmptyProjectList() {
             Map<String, Project> emptyProjects = new HashMap<>();
             
-            assertDoesNotThrow(() -> filePersistenceService.saveProjects(emptyProjects, List.of()));
+            assertDoesNotThrow(() -> FileUtils.saveProjects(emptyProjects, List.of()));
             
-            Map<String, Project> loadedProjects = filePersistenceService.loadProjects();
+            Map<String, Project> loadedProjects = FileUtils.loadProjects();
             assertEquals(0, loadedProjects.size());
         }
 
         @Test
         @DisplayName("Should handle missing file gracefully")
         void testMissingFile() {
-            Map<String, Project> loadedProjects = filePersistenceService.loadProjects();
+            Map<String, Project> loadedProjects = FileUtils.loadProjects();
             assertEquals(0, loadedProjects.size());
         }
     }
@@ -164,10 +162,10 @@ class FilePersistenceServiceTest {
             tasks.get(1).setAssignedUserId("U002");
 
             // Save tasks
-            assertDoesNotThrow(() -> filePersistenceService.saveTasks(tasks));
+            assertDoesNotThrow(() -> FileUtils.saveTasks(tasks));
 
             // Load tasks
-            List<models.Task> loadedTasks = filePersistenceService.loadTasks();
+            List<models.Task> loadedTasks = FileUtils.loadTasks();
 
             // Verify loaded tasks
             assertEquals(3, loadedTasks.size());
@@ -198,9 +196,9 @@ class FilePersistenceServiceTest {
         void testEmptyTaskList() {
             List<models.Task> emptyTasks = List.of();
             
-            assertDoesNotThrow(() -> filePersistenceService.saveTasks(emptyTasks));
+            assertDoesNotThrow(() -> FileUtils.saveTasks(emptyTasks));
             
-            List<models.Task> loadedTasks = filePersistenceService.loadTasks();
+            List<models.Task> loadedTasks = FileUtils.loadTasks();
             assertEquals(0, loadedTasks.size());
         }
     }
@@ -224,10 +222,10 @@ class FilePersistenceServiceTest {
             users.put("U002", regularUser);
 
             // Save users
-            assertDoesNotThrow(() -> filePersistenceService.saveUsers(users));
+            assertDoesNotThrow(() -> FileUtils.saveUsers(users));
 
             // Load users
-            Map<String, models.User> loadedUsers = filePersistenceService.loadUsers();
+            Map<String, models.User> loadedUsers = FileUtils.loadUsers();
 
             // Verify loaded users
             assertEquals(2, loadedUsers.size());
@@ -252,9 +250,9 @@ class FilePersistenceServiceTest {
         void testEmptyUserList() {
             Map<String, models.User> emptyUsers = new HashMap<>();
             
-            assertDoesNotThrow(() -> filePersistenceService.saveUsers(emptyUsers));
+            assertDoesNotThrow(() -> FileUtils.saveUsers(emptyUsers));
             
-            Map<String, models.User> loadedUsers = filePersistenceService.loadUsers();
+            Map<String, models.User> loadedUsers = FileUtils.loadUsers();
             assertEquals(0, loadedUsers.size());
         }
     }
@@ -285,7 +283,7 @@ class FilePersistenceServiceTest {
             Thread[] threads = new Thread[5];
             for (int i = 0; i < threads.length; i++) {
                 threads[i] = new Thread(() -> {
-                    assertDoesNotThrow(() -> filePersistenceService.saveProjects(projects, List.of()));
+                    assertDoesNotThrow(() -> FileUtils.saveProjects(projects, List.of()));
                 });
             }
 
@@ -300,7 +298,7 @@ class FilePersistenceServiceTest {
             }
 
             // Verify data integrity
-            Map<String, Project> loadedProjects = filePersistenceService.loadProjects();
+            Map<String, Project> loadedProjects = FileUtils.loadProjects();
             assertEquals(10, loadedProjects.size());
         }
     }

@@ -2,29 +2,22 @@
   "tasks": [
     {
       "taskId": "T001",
-      "taskName": "Task C",
-      "taskStatus": "Completed",
+      "taskName": "Concurrent Task 1",
+      "taskStatus": "In Progress",
       "projectId": "P001"
     },
     {
       "taskId": "T002",
-      "taskName": "Task A",
-      "taskStatus": "Completed",
+      "taskName": "Concurrent Task 2",
+      "taskStatus": "In Progress",
       "projectId": "P001"
     },
     {
       "taskId": "T003",
-      "taskName": "Task B",
-      "taskStatus": "Completed",
-      "projectId": "P001"
-    },
-    {
-      "taskId": "T004",
-      "taskName": "task1",
+      "taskName": "Concurrent Task 3",
       "taskStatus": "In Progress",
-      "projectId": "P002",
-      "assignedUserId": "U001"
-    }
+      "projectId": "P002"
+    },
 
   ]
 }

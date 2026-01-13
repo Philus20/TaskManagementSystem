@@ -6,6 +6,7 @@ import interfaces.ProjectFilter;
 import models.Project;
 import models.Task;
 import models.User;
+import utils.FileUtils;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -23,17 +24,15 @@ public class StreamService implements IStreamService {
     private final TaskService taskService;
     private final ProjectService projectService;
     private final UserService userService;
-    private final FilePersistenceService filePersistenceService;
     private final ExecutorService executorService;
     private final ScheduledExecutorService scheduledExecutor;
     private final AtomicInteger activeOperations;
     
     public StreamService(TaskService taskService, ProjectService projectService, 
-                        UserService userService, FilePersistenceService filePersistenceService) {
+                        UserService userService) {
         this.taskService = taskService;
         this.projectService = projectService;
         this.userService = userService;
-        this.filePersistenceService = filePersistenceService;
         this.executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         this.scheduledExecutor = Executors.newScheduledThreadPool(2);
         this.activeOperations = new AtomicInteger(0);
@@ -263,7 +262,7 @@ public class StreamService implements IStreamService {
         return CompletableFuture.runAsync(() -> {
             try {
                 List<Task> tasks = taskStream.collect(Collectors.toList());
-                filePersistenceService.saveTasks(tasks);
+                FileUtils.saveTasks(tasks);
             } catch (Exception e) {
                 System.err.println("Error streaming tasks to file: " + e.getMessage());
             }
@@ -277,7 +276,7 @@ public class StreamService implements IStreamService {
                 Map<String, Project> projects = projectStream
                         .collect(Collectors.toMap(Project::getId, project -> project));
                 List<Task> allTasks = taskService.getAllTasks();
-                filePersistenceService.saveProjects(projects, allTasks);
+                FileUtils.saveProjects(projects, allTasks);
             } catch (Exception e) {
                 System.err.println("Error streaming projects to file: " + e.getMessage());
             }
@@ -290,7 +289,7 @@ public class StreamService implements IStreamService {
             try {
                 Map<String, User> users = userStream
                         .collect(Collectors.toMap(User::getId, user -> user));
-                filePersistenceService.saveUsers(users);
+                FileUtils.saveUsers(users);
             } catch (Exception e) {
                 System.err.println("Error streaming users to file: " + e.getMessage());
             }

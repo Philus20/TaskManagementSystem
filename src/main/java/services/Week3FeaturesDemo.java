@@ -123,7 +123,6 @@ public class Week3FeaturesDemo {
     private void demonstrateNioFilePersistence() {
         System.out.println("4. NIO FILE PERSISTENCE DEMO");
         System.out.println("==============================");
-        new FilePersistenceService();
         System.out.println("Demonstrating NIO-based file persistence...");
         System.out.println("Data files are stored in 'src/data/' directory:");
         System.out.println("  - projects_data.json");
@@ -143,6 +142,18 @@ public class Week3FeaturesDemo {
         var1.setTaskId("T001");
         var2.setTaskId("T002");
         var3.setTaskId("T003");
+        
+        // Add tasks to repository before updating them
+        try {
+            this.taskService.addTask(var1);
+            this.taskService.addTask(var2);
+            this.taskService.addTask(var3);
+            System.out.println("Added 3 tasks to repository for concurrent demo");
+        } catch (Exception e) {
+            System.err.println("Error adding tasks: " + e.getMessage());
+            return;
+        }
+        
         List<String> var4 = Arrays.asList("T001", "T002", "T003");
         System.out.println("Demonstrating concurrent task updates...");
         System.out.println("Updating 3 tasks concurrently using ExecutorService...");

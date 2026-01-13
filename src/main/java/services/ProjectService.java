@@ -7,6 +7,7 @@ import interfaces.ProjectFilter;
 import interfaces.IStreamService;
 import models.Project;
 import models.Task;
+import utils.FileUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,16 +25,17 @@ public class ProjectService implements IProjectService {
 
     private final ProjectRepository projectRepository;
     private final  GenerateProjectId projectIdGenerator;
-    private final FilePersistenceService filePersistenceService;
     private TaskService taskService;
     private IStreamService streamService;
 
     public ProjectService(ProjectRepository projectRepository, GenerateProjectId projectIdGenerator) {
         this.projectRepository = projectRepository;
         this.projectIdGenerator = projectIdGenerator;
-        this.filePersistenceService = new FilePersistenceService();
         this.taskService = null; // Will be injected later to avoid circular dependency
         this.streamService = null; // Will be injected later
+        
+        // Initialize data directory
+        FileUtils.createDirectoryIfNotExists("src/data");
     }
     
     /**
@@ -41,7 +43,7 @@ public class ProjectService implements IProjectService {
      */
     public void loadProjectsFromFile() {
         try {
-            Map<String, Project> loadedProjects = filePersistenceService.loadProjects();
+            Map<String, Project> loadedProjects = FileUtils.loadProjects();
             
             // Update the ID generator counter based on existing projects
             if (!loadedProjects.isEmpty()) {
@@ -191,7 +193,7 @@ public class ProjectService implements IProjectService {
             
             // Only include tasks if TaskService is available
             List<Task> allTasks = (taskService != null) ? taskService.getAllTasks() : new ArrayList<>();
-            filePersistenceService.saveProjects(projects, allTasks);
+            FileUtils.saveProjects(projects, allTasks);
         } catch (Exception e) {
             System.err.println("Failed to save projects: " + e.getMessage());
         }

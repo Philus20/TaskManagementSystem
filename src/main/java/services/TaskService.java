@@ -16,13 +16,13 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import models.Task;
+import utils.FileUtils;
 import utils.exceptions.EmptyProjectException;
 import utils.exceptions.TaskNotFoundException;
 
 public class TaskService implements ITaskService {
     private final TaskRepository taskRepository;
     private final IdGenerator taskIdGenerator;
-    private final FilePersistenceService filePersistenceService;
     private ConcurrentTaskUpdateService concurrentUpdateService;
     private IStreamService streamService;
 
@@ -34,9 +34,11 @@ public class TaskService implements ITaskService {
         } else {
             this.taskRepository = var1;
             this.taskIdGenerator = var2;
-            this.filePersistenceService = new FilePersistenceService();
             this.concurrentUpdateService = null;
             this.streamService = null; // Will be injected later
+            
+            // Initialize data directory
+            FileUtils.createDirectoryIfNotExists("src/data");
         }
     }
 
@@ -100,7 +102,7 @@ public class TaskService implements ITaskService {
 
     public void loadTasksFromFile() {
         try {
-            List<Task> var1 = this.filePersistenceService.loadTasks();
+            List<Task> var1 = FileUtils.loadTasks();
             
             // Update the ID generator counter based on existing tasks
             if (!var1.isEmpty()) {
@@ -284,7 +286,7 @@ public class TaskService implements ITaskService {
 
     public synchronized void saveTasksToFile() {
         try {
-            this.filePersistenceService.saveTasks(this.taskRepository.getAll());
+            FileUtils.saveTasks(this.taskRepository.getAll());
         } catch (Exception var2) {
             System.err.println("Failed to save tasks: " + var2.getMessage());
         }
